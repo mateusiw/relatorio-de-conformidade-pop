@@ -47,12 +47,12 @@
                 display: none;
             }
             
-            /* Ajuste da TextArea na impressão - AUMENTADO O ESPAÇO */
+            /* Ajuste da TextArea na impressão - ESPAÇO GENEROSO */
             textarea { 
                 border: 1px solid #999 !important; 
                 resize: none;
                 background: transparent;
-                min-height: 2.5cm !important; /* Aumentado para 2.5cm (aprox. 3-4 linhas manuais) */
+                min-height: 2.5cm !important; 
                 box-shadow: none !important;
                 margin-top: 5px !important;
                 display: block !important;
@@ -130,18 +130,31 @@
         
         <!-- SELEÇÃO DE POP (Dropdown) -->
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-8 no-print">
-            <label class="block text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
-                <i data-lucide="library" class="inline w-4 h-4 mr-1"></i> Selecione o Procedimento (POP)
-            </label>
-            <select id="popSelect" onchange="changePOP()" class="w-full p-3 border-2 border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-lg font-medium shadow-sm">
-                <option value="pop01">POP 01 - HIGIENE E SAÚDE DOS MANIPULADORES</option>
-                <option value="pop02">POP 02 - HIGIENIZAÇÃO DE INSTALAÇÕES E EQUIPAMENTOS</option>
-                <option value="pop03">POP 03 - MANEJO DE RESÍDUOS</option>
-                <option value="pop04">POP 04 - CONTROLE INTEGRADO DE VETORES E PRAGAS</option>
-                <option value="pop05">POP 05 - CONTROLE DA POTABILIDADE DE ÁGUA</option>
-                <option value="pop06">POP 06 - SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS</option>
-                <option value="pop07">POP 07 - MANUTENÇÃO PREVENTIVA E CALIBRAÇÃO</option>
-            </select>
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
+                    <i data-lucide="library" class="inline w-4 h-4 mr-1"></i> Selecione o Procedimento (POP)
+                </label>
+                <select id="popSelect" onchange="changePOP()" class="w-full p-3 border-2 border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-lg font-medium shadow-sm">
+                    <option value="pop01">POP 01 - HIGIENE E SAÚDE DOS MANIPULADORES</option>
+                    <option value="pop02">POP 02 - HIGIENIZAÇÃO DE INSTALAÇÕES E EQUIPAMENTOS</option>
+                    <option value="pop03">POP 03 - MANEJO DE RESÍDUOS</option>
+                    <option value="pop04">POP 04 - CONTROLE INTEGRADO DE VETORES E PRAGAS</option>
+                    <option value="pop05">POP 05 - CONTROLE DA POTABILIDADE DE ÁGUA</option>
+                    <option value="pop06">POP 06 - SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS</option>
+                    <option value="pop07">POP 07 - MANUTENÇÃO PREVENTIVA E CALIBRAÇÃO</option>
+                </select>
+            </div>
+
+            <!-- SELEÇÃO DE SUB-GRUPOS (Dinâmico para todos os POPs) -->
+            <div id="sub-selection-container" class="border-t border-blue-200 pt-4 hidden">
+                <p class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <i data-lucide="list-checks" class="w-4 h-4"></i>
+                    Selecione os grupos para avaliar/imprimir:
+                </p>
+                <div id="sub-selection-list" class="flex flex-wrap gap-3">
+                    <!-- Checkboxes injetados via JS -->
+                </div>
+            </div>
         </div>
 
         <!-- Cabeçalho do Relatório -->
@@ -222,6 +235,7 @@
 
     <script>
         let currentPOP = 'pop01';
+        let currentVisibleGroups = []; // Armazena quais grupos estão visíveis (índices)
 
         // --- BANCO DE DADOS DOS POPS ---
         const popsData = {
@@ -477,27 +491,93 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             
-            // Removido: Definir data de hoje se vazio
-            // const dateInput = document.getElementById('data');
-            // if (!dateInput.value) {
-            //     dateInput.valueAsDate = new Date();
-            // }
-
             // Tentar recuperar último POP selecionado
             const lastPOP = localStorage.getItem('last_selected_pop');
             if (lastPOP && popsData[lastPOP]) {
                 document.getElementById('popSelect').value = lastPOP;
-                currentPOP = lastPOP;
             }
-
-            renderPOP();
+            // Força a atualização do POP inicial (carrega dados, define grupos visíveis, renderiza)
+            changePOP();
         });
 
-        // --- TROCA DE POP ---
+        // --- TROCA DE POP E CARREGAMENTO ---
         function changePOP() {
             currentPOP = document.getElementById('popSelect').value;
             localStorage.setItem('last_selected_pop', currentPOP);
+            
+            const storageKey = `data_${currentPOP}`;
+            const savedJSON = localStorage.getItem(storageKey);
+            const savedData = savedJSON ? JSON.parse(savedJSON) : null;
+
+            // 1. Determinar Grupos Visíveis
+            // AGORA INICIA VAZIO [] SE NÃO HOUVER SALVO, OU USA O SALVO
+            if (savedData && savedData.meta && savedData.meta.visibleGroups) {
+                currentVisibleGroups = savedData.meta.visibleGroups;
+            } else {
+                currentVisibleGroups = []; // Padrão: Nenhum selecionado
+            }
+
+            // 2. Renderizar Checkboxes de Seleção
+            renderSubSelection();
+
+            // 3. Renderizar Formulário (baseado nos grupos visíveis)
             renderPOP();
+
+            // 4. Preencher dados salvos nos campos
+            if (savedData) fillFormData(savedData);
+            
+            // Atualizar estatísticas após carregar
+            updateStats();
+        }
+
+        // --- RENDERIZAÇÃO DOS CHECKBOXES ---
+        function renderSubSelection() {
+            const container = document.getElementById('sub-selection-container');
+            const list = document.getElementById('sub-selection-list');
+            list.innerHTML = ''; // Limpar
+
+            popsData[currentPOP].groups.forEach((group, index) => {
+                const isChecked = currentVisibleGroups.includes(index) ? 'checked' : '';
+                
+                // Criar elemento HTML para o checkbox
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded border border-blue-100 hover:bg-blue-50 transition select-none shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" 
+                            value="${index}" onchange="toggleGroup(${index})" ${isChecked}>
+                        <span class="text-gray-700 font-medium text-sm">${group.title}</span>
+                    </label>
+                `;
+                list.appendChild(div.firstElementChild);
+            });
+            
+            container.classList.remove('hidden');
+        }
+
+        function toggleGroup(index) {
+            // Salvar estado atual dos inputs antes de re-renderizar (para não perder o que foi digitado)
+            saveProgress(); 
+
+            // Atualizar lista de visíveis
+            const checkbox = document.querySelector(`input[type="checkbox"][value="${index}"]`);
+            if (checkbox.checked) {
+                if (!currentVisibleGroups.includes(index)) currentVisibleGroups.push(index);
+            } else {
+                currentVisibleGroups = currentVisibleGroups.filter(i => i !== index);
+            }
+            currentVisibleGroups.sort((a, b) => a - b); // Manter ordem
+
+            // Re-renderizar o formulário
+            renderPOP();
+            
+            // Recarregar os dados (agora incluindo a nova configuração de visibilidade que acabamos de salvar/modificar)
+            // Como saveProgress salvou o estado DOM atual, precisamos garantir que ao re-renderizar,
+            // os dados ocultos não sejam perdidos. A função saveProgress abaixo cuida disso.
+            const savedData = JSON.parse(localStorage.getItem(`data_${currentPOP}`));
+            if(savedData) fillFormData(savedData);
+            
+            // Atualizar visibilidade salva
+            saveProgress();
         }
 
         // --- RENDERIZAÇÃO DO CONTEÚDO ---
@@ -516,15 +596,18 @@
             contentDiv.innerHTML = '';
 
             // Gerar Grupos e Perguntas
-            data.groups.forEach(group => {
+            data.groups.forEach((group, index) => {
+                // Verificar se o grupo deve ser mostrado
+                if (!currentVisibleGroups.includes(index)) return; 
+
                 const section = document.createElement('section');
-                section.className = "page-break mb-8 print:mb-4"; // Margem reduzida na impressão
+                section.className = "page-break mb-8 print:mb-4";
                 
                 section.innerHTML = `
                     <h3 class="text-lg font-bold text-blue-800 border-l-4 border-blue-600 pl-3 mb-4 bg-blue-50 py-2">
                         ${group.title}
                     </h3>
-                    <div class="space-y-4 print:space-y-2" id="group-${group.title.replace(/\s+/g, '-')}"></div>
+                    <div class="space-y-4 print:space-y-2" id="group-${index}"></div>
                 `;
                 
                 contentDiv.appendChild(section);
@@ -538,23 +621,18 @@
                         
                         <!-- Opções -->
                         <div class="flex flex-wrap gap-2 mb-3 print:mb-1">
-                            <!-- Conforme -->
                             <div>
                                 <input type="radio" name="${q.id}" id="${q.id}_C" value="C" class="hidden radio-option" onchange="saveProgress()">
                                 <label for="${q.id}_C" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition select-none flex items-center gap-1 radio-label">
                                     <i data-lucide="check-circle" class="w-4 h-4 print:hidden"></i> C
                                 </label>
                             </div>
-
-                            <!-- Não Conforme -->
                             <div>
                                 <input type="radio" name="${q.id}" id="${q.id}_NC" value="NC" class="hidden radio-option" onchange="saveProgress()">
                                 <label for="${q.id}_NC" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition select-none flex items-center gap-1 radio-label">
                                     <i data-lucide="x-circle" class="w-4 h-4 print:hidden"></i> NC
                                 </label>
                             </div>
-
-                            <!-- Não se Aplica -->
                             <div>
                                 <input type="radio" name="${q.id}" id="${q.id}_NA" value="NA" class="hidden radio-option" onchange="saveProgress()">
                                 <label for="${q.id}_NA" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition select-none radio-label">
@@ -563,7 +641,7 @@
                             </div>
                         </div>
                         
-                        <!-- Campo de Observação (Textarea) -->
+                        <!-- Campo de Observação -->
                         <div class="mt-2">
                             <textarea id="obs_${q.id}" rows="2" placeholder="Observações..." class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
                         </div>
@@ -574,92 +652,91 @@
             });
 
             lucide.createIcons();
-            loadProgress(); // Carrega respostas salvas deste POP
             updateStats();
         }
 
-        // --- SALVAMENTO E CARREGAMENTO (NAMESPACE POR POP) ---
-        function saveProgress() {
-            const dateInput = document.getElementById('data');
-            // Verificar se há valor na data e adicionar classe para controle CSS
-            if (dateInput.value) {
-                dateInput.classList.add('has-value');
-            } else {
-                dateInput.classList.remove('has-value');
+        // --- PREENCHIMENTO DE DADOS (Load) ---
+        function fillFormData(data) {
+            // Meta
+            if(data.meta) {
+                document.getElementById('responsavel').value = data.meta.responsavel || '';
+                document.getElementById('setor').value = data.meta.setor || '';
+                
+                const dateInput = document.getElementById('data');
+                if(data.meta.data) {
+                    dateInput.value = data.meta.data;
+                    dateInput.classList.add('has-value');
+                } else {
+                    dateInput.value = '';
+                    dateInput.classList.remove('has-value');
+                }
+                
+                document.getElementById('obs-geral').value = data.meta.obsGeral || '';
+                document.getElementById('aprovado-por').value = data.meta.aprovadoPor || '';
             }
 
-            const storageKey = `data_${currentPOP}`; // Chave única por POP (ex: data_pop01)
+            // Respostas
+            if(data.answers) {
+                Object.keys(data.answers).forEach(key => {
+                    const item = data.answers[key];
+                    // Tentar preencher (se o elemento existir na tela)
+                    const radio = document.getElementById(`${key}_${item.val}`);
+                    if (radio) radio.checked = true;
+                    
+                    const obsInput = document.getElementById(`obs_${key}`);
+                    if (obsInput && item.obs) obsInput.value = item.obs;
+                });
+            }
+        }
+
+        // --- SALVAMENTO (Save) ---
+        function saveProgress() {
+            const dateInput = document.getElementById('data');
+            if (dateInput.value) dateInput.classList.add('has-value');
+            else dateInput.classList.remove('has-value');
+
+            const storageKey = `data_${currentPOP}`;
             
+            // Recuperar dados antigos para não perder o que estiver oculto
+            const oldData = JSON.parse(localStorage.getItem(storageKey)) || { answers: {} };
+            const newAnswers = { ...oldData.answers }; 
+
+            // Atualizar apenas o que está visível/ativo
+            popsData[currentPOP].groups.forEach((group, index) => {
+                // Se o grupo está visível, raspamos os dados da tela
+                if(currentVisibleGroups.includes(index)) {
+                    group.questions.forEach(q => {
+                        const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                        const obs = document.getElementById(`obs_${q.id}`)?.value;
+                        
+                        if (selected || obs) {
+                            newAnswers[q.id] = {
+                                val: selected ? selected.value : null,
+                                obs: obs
+                            };
+                        } else {
+                            // Se estava visível e o usuário limpou, removemos do objeto
+                            delete newAnswers[q.id];
+                        }
+                    });
+                }
+                // Se o grupo está oculto, mantemos o que estava em oldData.answers (já copiado)
+            });
+
             const data = {
                 meta: {
                     responsavel: document.getElementById('responsavel').value,
                     setor: document.getElementById('setor').value,
                     data: dateInput.value,
                     obsGeral: document.getElementById('obs-geral').value,
-                    aprovadoPor: document.getElementById('aprovado-por').value
+                    aprovadoPor: document.getElementById('aprovado-por').value,
+                    visibleGroups: currentVisibleGroups // Salvar preferência de visualização
                 },
-                answers: {}
+                answers: newAnswers
             };
-
-            // Coletar respostas apenas do POP atual
-            popsData[currentPOP].groups.forEach(group => {
-                group.questions.forEach(q => {
-                    const selected = document.querySelector(`input[name="${q.id}"]:checked`);
-                    const obs = document.getElementById(`obs_${q.id}`)?.value;
-                    if (selected || obs) {
-                        data.answers[q.id] = {
-                            val: selected ? selected.value : null,
-                            obs: obs
-                        };
-                    }
-                });
-            });
 
             localStorage.setItem(storageKey, JSON.stringify(data));
             updateStats();
-        }
-
-        function loadProgress() {
-            const storageKey = `data_${currentPOP}`;
-            const saved = localStorage.getItem(storageKey);
-            
-            // Limpar formulário visualmente antes de carregar
-            document.getElementById('responsavel').value = '';
-            document.getElementById('setor').value = '';
-            const dateInput = document.getElementById('data');
-            dateInput.value = ''; 
-            dateInput.classList.remove('has-value'); // Remove classe se vazio
-            document.getElementById('obs-geral').value = '';
-            document.getElementById('aprovado-por').value = '';
-            
-            if (saved) {
-                const data = JSON.parse(saved);
-                
-                if(data.meta) {
-                    document.getElementById('responsavel').value = data.meta.responsavel || '';
-                    document.getElementById('setor').value = data.meta.setor || '';
-                    if(data.meta.data) {
-                        dateInput.value = data.meta.data;
-                        dateInput.classList.add('has-value'); // Adiciona classe se tiver valor
-                    }
-                    document.getElementById('obs-geral').value = data.meta.obsGeral || '';
-                    document.getElementById('aprovado-por').value = data.meta.aprovadoPor || '';
-                }
-
-                if(data.answers) {
-                    Object.keys(data.answers).forEach(key => {
-                        const item = data.answers[key];
-                        if (item.val) {
-                            const radio = document.getElementById(`${key}_${item.val}`);
-                            if (radio) radio.checked = true;
-                        }
-                        if (item.obs) {
-                            const obsInput = document.getElementById(`obs_${key}`);
-                            if (obsInput) obsInput.value = item.obs;
-                        }
-                    });
-                }
-            }
         }
 
         function updateStats() {
@@ -667,7 +744,10 @@
             let compliant = 0;
             let nonCompliant = 0;
 
-            popsData[currentPOP].groups.forEach(group => {
+            // Calcular estatísticas apenas sobre os itens VISÍVEIS
+            popsData[currentPOP].groups.forEach((group, index) => {
+                if (!currentVisibleGroups.includes(index)) return;
+
                 group.questions.forEach(q => {
                     const selected = document.querySelector(`input[name="${q.id}"]:checked`);
                     if (selected) {
@@ -698,7 +778,7 @@
         function resetForm() {
             if(confirm(`Tem certeza que deseja limpar as respostas do ${currentPOP.toUpperCase()}?`)) {
                 localStorage.removeItem(`data_${currentPOP}`);
-                renderPOP(); // Re-renderiza para limpar visualmente
+                changePOP(); // Recarrega tudo do zero
             }
         }
     </script>
