@@ -138,9 +138,9 @@
                 <option value="pop02">POP 02 - HIGIENIZAÇÃO DE INSTALAÇÕES E EQUIPAMENTOS</option>
                 <option value="pop03">POP 03 - MANEJO DE RESÍDUOS</option>
                 <option value="pop04">POP 04 - CONTROLE INTEGRADO DE VETORES E PRAGAS</option>
+                <option value="pop05">POP 05 - CONTROLE DA POTABILIDADE DE ÁGUA</option>
                 <option value="pop06">POP 06 - SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS</option>
                 <option value="pop07">POP 07 - MANUTENÇÃO PREVENTIVA E CALIBRAÇÃO</option>
-                <option value="pop05" class="text-gray-500">POP 05 - (Pendente - Reservado para o final)</option>
             </select>
         </div>
 
@@ -386,6 +386,30 @@
                     }
                 ]
             },
+            'pop05': {
+                title: "CONTROLE DA POTABILIDADE DE ÁGUA",
+                subtitle: "Baseado no POP 05 - Revisão 00 - 25/11/2025",
+                date: "25/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Higienização de Reservatórios",
+                        questions: [
+                            { id: 'p05_q1', text: 'A limpeza da caixa d\'água foi realizada nos últimos 6 meses (Semestral)?' },
+                            { id: 'p05_q2', text: 'A caixa d\'água está devidamente tampada e protegida contra entrada de animais/sujeira?' },
+                            { id: 'p05_q3', text: 'Existe registro (planilha/ficha) assinado da última limpeza realizada?' }
+                        ]
+                    },
+                    {
+                        title: "2. Análises Laboratoriais",
+                        questions: [
+                            { id: 'p05_q4', text: 'A empresa possui laudo de análise microbiológica da água dentro da validade (Semestral)?' },
+                            { id: 'p05_q5', text: 'A empresa possui laudo de análise físico-química da água dentro da validade (Anual)?' },
+                            { id: 'p05_q6', text: 'Os laudos atestam que a água está própria para consumo (satisfatória)?' }
+                        ]
+                    }
+                ]
+            },
             'pop06': {
                 title: "SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS",
                 subtitle: "Baseado no POP 06 - Revisão 00 - 29/11/2025",
@@ -443,20 +467,6 @@
                         questions: [
                             { id: 'p07_q7', text: 'Equipamentos descalibrados tiveram operação suspensa imediatamente?' },
                             { id: 'p07_q8', text: 'Foi realizada substituição ou manutenção de equipamento com defeito?' }
-                        ]
-                    }
-                ]
-            },
-            'pop05': {
-                title: "POP 05 - EM BREVE (PENDENTE)",
-                subtitle: "Aguardando envio do arquivo...",
-                date: "--/--/----",
-                rev: "--",
-                groups: [
-                    {
-                        title: "Aguardando Conteúdo",
-                        questions: [
-                            { id: 'p05_q1', text: 'Este questionário será o último a ser adicionado.' }
                         ]
                     }
                 ]
