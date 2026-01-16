@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Qualidade - POPs</title>
+    
+    <!-- Meta tags para PWA (Aparência de App) -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+
+    <!-- Tailwind CSS (Estilização) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Ícones -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Estilos específicos para impressão */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; font-size: 11pt; }
+            .print-border { border: 1px solid #ccc; }
+            
+            /* Inputs e Selects na impressão: sem borda, apenas linha ou invisível se vazio */
+            input[type="text"], input[type="date"], select { 
+                border: none; 
+                border-bottom: 1px solid #000; 
+                padding: 0; 
+                appearance: none; 
+                -webkit-appearance: none; 
+                background: transparent; 
+                height: auto;
+            }
+
+            /* TRUQUE PARA ESCONDER dd/mm/aaaa NA IMPRESSÃO */
+            input[type="date"] {
+                color: transparent; /* Esconde o placeholder padrão */
+            }
+            input[type="date"].has-value {
+                color: black; /* Mostra a data se ela tiver sido preenchida */
+            }
+            /* Esconder ícone de calendário na impressão */
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                display: none;
+            }
+            
+            /* Ajuste da TextArea na impressão - AUMENTADO O ESPAÇO */
+            textarea { 
+                border: 1px solid #999 !important; 
+                resize: none;
+                background: transparent;
+                min-height: 2.5cm !important; /* Aumentado para 2.5cm (aprox. 3-4 linhas manuais) */
+                box-shadow: none !important;
+                margin-top: 5px !important;
+                display: block !important;
+                page-break-inside: avoid;
+            }
+
+            /* Container da pergunta não quebra página no meio */
+            .question-container {
+                page-break-inside: avoid;
+                border: none !important; 
+                padding: 0.2cm 0 !important; 
+                box-shadow: none !important;
+                margin-bottom: 0.2cm !important;
+                border-bottom: 1px dashed #ccc !important; 
+            }
+
+            /* Reduzir margens gerais na impressão */
+            main { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+            .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+            
+            /* Cabeçalhos de seção mais compactos */
+            h3 { 
+                font-size: 12pt !important; 
+                margin-bottom: 0.2rem !important; 
+                padding-top: 0.2rem !important;
+                padding-bottom: 0.2rem !important;
+                background-color: #f0f0f0 !important; 
+                color: #000 !important;
+                border-left: 2px solid #000 !important;
+            }
+
+            /* Botões de opção (C/NC/NA) mais limpos para impressão */
+            .radio-label {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                background: none !important;
+                padding: 2px 8px !important;
+                font-size: 10pt !important;
+            }
+
+            select { background-image: none; }
+            .page-break { page-break-inside: avoid; }
+        }
+        
+        /* Estilos de tela */
+        .radio-option:checked + label {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-24">
+
+    <!-- Cabeçalho (Fixo no topo em mobile) -->
+    <header class="bg-blue-700 text-white shadow-md sticky top-0 z-50 no-print">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold flex items-center gap-2">
+                <i data-lucide="folder-check" class="w-6 h-6"></i>
+                Gestão de POPs
+            </h1>
+            <div class="flex gap-2">
+                <button onclick="resetForm()" class="p-2 bg-blue-800 rounded hover:bg-blue-900 transition" title="Limpar Formulário Atual">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+                <button onclick="window.print()" class="p-2 bg-green-500 rounded hover:bg-green-600 transition font-bold flex items-center gap-1">
+                    <i data-lucide="printer" class="w-5 h-5"></i>
+                    <span class="hidden sm:inline">Imprimir</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 md:p-8 bg-white shadow-xl mt-4 mb-8 rounded-lg print:shadow-none print:mt-0 print:w-full">
+        
+        <!-- SELEÇÃO DE POP (Dropdown) -->
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-8 no-print">
+            <label class="block text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
+                <i data-lucide="library" class="inline w-4 h-4 mr-1"></i> Selecione o Procedimento (POP)
+            </label>
+            <select id="popSelect" onchange="changePOP()" class="w-full p-3 border-2 border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-lg font-medium shadow-sm">
+                <option value="pop01">POP 01 - HIGIENE E SAÚDE DOS MANIPULADORES</option>
+                <option value="pop02">POP 02 - HIGIENIZAÇÃO DE INSTALAÇÕES E EQUIPAMENTOS</option>
+                <option value="pop03">POP 03 - MANEJO DE RESÍDUOS</option>
+                <option value="pop04">POP 04 - CONTROLE INTEGRADO DE VETORES E PRAGAS</option>
+                <option value="pop06">POP 06 - SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS</option>
+                <option value="pop07">POP 07 - MANUTENÇÃO PREVENTIVA E CALIBRAÇÃO</option>
+                <option value="pop05" class="text-gray-500">POP 05 - (Pendente - Reservado para o final)</option>
+            </select>
+        </div>
+
+        <!-- Cabeçalho do Relatório -->
+        <div class="border-b-2 border-gray-200 pb-4 mb-4 print:mb-2 print:pb-2">
+            <div class="flex justify-between items-start">
+                <div class="flex items-center gap-4">
+                    <!-- Logo para Impressão -->
+                    <img src="https://i.imgur.com/O44kome.png" alt="Logo" class="h-24 w-auto hidden print:block">
+                    
+                    <div>
+                        <!-- Título Dinâmico -->
+                        <h2 id="report-title" class="text-2xl font-bold text-gray-800 uppercase print:text-xl">Lista de Verificação</h2>
+                        <p id="report-subtitle" class="text-gray-500 text-sm mt-1">Selecione um POP acima</p>
+                    </div>
+                </div>
+                <div class="text-right hidden print:block">
+                    <div class="text-xs text-gray-400">Data de Emissão: <span id="pop-date">--/--/----</span></div>
+                    <div class="text-xs text-gray-400">Revisão: <span id="pop-rev">00</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 print:mt-2 print:gap-2">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Responsável pela Avaliação:</label>
+                    <input type="text" id="responsavel" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="saveProgress()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Data da Avaliação:</label>
+                    <input type="date" id="data" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" oninput="saveProgress()">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Setor Avaliado:</label>
+                    <input type="text" id="setor" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="saveProgress()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Dinâmica dos Questionários -->
+        <form id="checklistForm" class="space-y-8 print:space-y-4">
+            <div id="dynamic-content">
+                <!-- O conteúdo das perguntas será injetado aqui via JavaScript -->
+            </div>
+
+            <!-- Observações Gerais -->
+            <section class="mt-8 border-t pt-4 page-break">
+                <h3 class="text-lg font-bold text-gray-700 mb-2">Observações Gerais / Ações Corretivas Necessárias</h3>
+                <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Descreva aqui as não conformidades encontradas..." oninput="saveProgress()"></textarea>
+            </section>
+
+            <!-- Rodapé de Assinatura (Aprovado por e Assinatura) -->
+            <section class="mt-12 pt-6 border-t-2 border-gray-300 page-break">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Aprovado por:</label>
+                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium" placeholder="Nome do Responsável/Gerente" oninput="saveProgress()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-8">Assinatura:</label>
+                        <div class="border-b-2 border-black w-full h-8"></div>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </main>
+
+    <!-- Barra de Status Flutuante -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 no-print z-40">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <span class="text-sm text-gray-500">Conformidade (<span id="current-pop-label">POP --</span>):</span>
+                <div class="text-2xl font-bold text-blue-600" id="score-display">0%</div>
+            </div>
+            <div class="text-right text-xs text-gray-400">
+                Itens Conformes: <span id="count-c">0</span> | Não Conformes: <span id="count-nc">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPOP = 'pop01';
+
+        // --- BANCO DE DADOS DOS POPS ---
+        const popsData = {
+            'pop01': {
+                title: "HIGIENE E SAÚDE DOS MANIPULADORES",
+                subtitle: "Baseado no POP 01 - Revisão 00 - 22/11/2025",
+                date: "22/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Saúde e Documentação",
+                        questions: [
+                            { id: 'p01_q1', text: 'ASO (Atestado de Saúde Ocupacional) dos manipuladores está em dia (Admissional/Periódico)?' },
+                            { id: 'p01_q2', text: 'Manipuladores sem sinais de infecções (pulmonares, faringites), febre, vômitos ou diarreia?' },
+                            { id: 'p01_q3', text: 'Ausência de feridas, cortes ou lesões expostas nas mãos e braços?' }
+                        ]
+                    },
+                    {
+                        title: "2. Higiene Pessoal e Uniformes",
+                        questions: [
+                            { id: 'p01_q4', text: 'Uniforme completo (blusa, calça) e limpo?' },
+                            { id: 'p01_q5', text: 'Uso correto de toucas (cabelos totalmente protegidos)?' },
+                            { id: 'p01_q6', text: 'Calçados fechados (botas brancas) em bom estado de conservação?' },
+                            { id: 'p01_q7', text: 'Ausência de adornos (anéis, alianças, relógios, pulseiras, brincos, correntes)?' },
+                            { id: 'p01_q8', text: 'Unhas curtas, limpas e sem esmalte ou base?' },
+                            { id: 'p01_q9', text: 'Ausência de barba e bigode?' },
+                            { id: 'p01_q10', text: 'Manipuladores sem maquiagem e sem perfume forte?' }
+                        ]
+                    },
+                    {
+                        title: "3. Comportamento Operacional",
+                        questions: [
+                            { id: 'p01_q11', text: 'Funcionários não fumam, tossem, espirram ou cospem próximo aos alimentos?' },
+                            { id: 'p01_q12', text: 'Funcionários evitam falar excessivamente sobre os alimentos?' },
+                            { id: 'p01_q13', text: 'Manipuladores não manipulam dinheiro durante o serviço?' },
+                            { id: 'p01_q14', text: 'Realizam a lavagem das mãos corretamente após riscos de contaminação?' }
+                        ]
+                    },
+                    {
+                        title: "4. Instalações e Visitantes",
+                        questions: [
+                            { id: 'p01_q15', text: 'Pia exclusiva para mãos abastecida (sabão bactericida, papel toalha)?' },
+                            { id: 'p01_q16', text: 'Cartazes orientativos de lavagem de mãos fixados e visíveis?' },
+                            { id: 'p01_q17', text: 'Visitantes cumprem as regras (touca, sem adornos, sem tocar nos alimentos)?' }
+                        ]
+                    }
+                ]
+            },
+            'pop02': {
+                title: "HIGIENIZAÇÃO DAS INSTALAÇÕES, MÓVEIS E UTENSÍLIOS",
+                subtitle: "Baseado no POP 02 - Revisão 00 - 22/11/2025",
+                date: "22/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Disponibilidade de Materiais e Produtos",
+                        questions: [
+                            { id: 'p02_q1', text: 'Detergentes e sanitizantes estão disponíveis em quantidade suficiente?' },
+                            { id: 'p02_q2', text: 'Utensílios de limpeza (baldes, vassouras, rodos) estão disponíveis e em bom estado?' },
+                            { id: 'p02_q3', text: 'Instalações possuem água fria em quantidade suficiente?' }
+                        ]
+                    },
+                    {
+                        title: "2. Aquisição, Estocagem e Identificação",
+                        questions: [
+                            { id: 'p02_q4', text: 'Produtos de higiene possuem registro no Ministério da Saúde?' },
+                            { id: 'p02_q5', text: 'Produtos são sem odorizantes (sem cheiro forte)?' },
+                            { id: 'p02_q6', text: 'Produtos estão armazenados corretamente no almoxarifado?' },
+                            { id: 'p02_q7', text: 'Utensílios de limpeza são separados e identificados por área (Ex: Banheiro separados da Produção)?' }
+                        ]
+                    },
+                    {
+                        title: "3. Higienização Diária",
+                        questions: [
+                            { id: 'p02_q8', text: 'Pisos, rodapés e ralos estão limpos?' },
+                            { id: 'p02_q9', text: 'Pias e tanques estão limpos?' },
+                            { id: 'p02_q10', text: 'Banheiros/Sanitários estão higienizados?' },
+                            { id: 'p02_q11', text: 'Equipamentos (máquinas, câmaras frias) e utensílios estão limpos e sanitizados?' },
+                            { id: 'p02_q12', text: 'Coletores de lixo estão limpos e tampados?' }
+                        ]
+                    },
+                    {
+                        title: "4. Higienização Semanal e Mensal",
+                        questions: [
+                            { id: 'p02_q13', text: 'Paredes, portas e janelas estão limpas? (Semanal)' },
+                            { id: 'p02_q14', text: 'Prateleiras estão limpas e organizadas? (Semanal)' },
+                            { id: 'p02_q15', text: 'Luminárias, teto ou forro estão limpos? (Mensal)' },
+                            { id: 'p02_q16', text: 'Caixas de isopor (se houver) estão limpas?' }
+                        ]
+                    }
+                ]
+            },
+            'pop03': {
+                title: "MANEJO DE RESÍDUOS",
+                subtitle: "Baseado no POP 03 - Revisão 00 - 24/11/2025",
+                date: "24/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Acondicionamento e Coleta",
+                        questions: [
+                            { id: 'p03_q1', text: 'Lixeiras de áreas críticas (pias, manipulação, banheiros) possuem pedal e tampa?' },
+                            { id: 'p03_q2', text: 'Lixo de escritório está acondicionado em sacos plásticos resistentes?' },
+                            { id: 'p03_q3', text: 'Resíduos orgânicos são separados em caixas plásticas específicas?' },
+                            { id: 'p03_q4', text: 'Resíduos recicláveis são coletados e separados em local determinado?' }
+                        ]
+                    },
+                    {
+                        title: "2. Higiene e Frequência",
+                        questions: [
+                            { id: 'p03_q5', text: 'Lixeiras são lavadas diariamente ou quando necessário?' },
+                            { id: 'p03_q6', text: 'Lixo orgânico é descartado diariamente?' },
+                            { id: 'p03_q7', text: 'Áreas internas e externas estão limpas e sem acúmulo de lixo (Observação Visual)?' }
+                        ]
+                    },
+                    {
+                        title: "3. Controle de Instalações (Preventivo)",
+                        questions: [
+                            { id: 'p03_q8', text: 'Instalações (portas e aberturas) mantidas fechadas para evitar insetos/roedores?' },
+                            { id: 'p03_q9', text: 'Ausência de lixo derramado fora das lixeiras?' }
+                        ]
+                    }
+                ]
+            },
+            'pop04': {
+                title: "CONTROLE INTEGRADO DE VETORES E PRAGAS",
+                subtitle: "Baseado no POP 04 - Revisão 00 - 24/11/2025",
+                date: "24/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Instalações e Acesso (Barreiras Físicas)",
+                        questions: [
+                            { id: 'p04_q1', text: 'Ralos, portas e aberturas estão protegidos para evitar entrada de pragas?' },
+                            { id: 'p04_q2', text: 'As instalações estão livres de buracos ou frestas que sirvam de abrigo?' },
+                            { id: 'p04_q3', text: 'Área externa está livre de acúmulo de sucatas, ninhos ou água parada?' }
+                        ]
+                    },
+                    {
+                        title: "2. Controle de Resíduos e Ambiente",
+                        questions: [
+                            { id: 'p04_q4', text: 'Resíduos (alimentos/embalagens) são removidos diariamente?' },
+                            { id: 'p04_q5', text: 'Lixeiras e local de armazenamento de lixo estão higienizados?' },
+                            { id: 'p04_q6', text: 'Ausência de animais domésticos na área da empresa?' }
+                        ]
+                    },
+                    {
+                        title: "3. Monitoramento Visual (Diário)",
+                        questions: [
+                            { id: 'p04_q7', text: 'AUSÊNCIA de sinais de roedores (fezes, roídos, trilhas)?' },
+                            { id: 'p04_q8', text: 'AUSÊNCIA de baratas, formigas ou outros insetos?' },
+                            { id: 'p04_q9', text: 'AUSÊNCIA de cupins nas estruturas?' }
+                        ]
+                    },
+                    {
+                        title: "4. Empresa Terceirizada (Controle Químico)",
+                        questions: [
+                            { id: 'p04_q10', text: 'Serviço de desinsetização/desratização está em dia (Trimestral)?' },
+                            { id: 'p04_q11', text: 'A empresa terceirizada possui licença sanitária válida?' },
+                            { id: 'p04_q12', text: 'Certificados e ordem de serviço dos produtos utilizados estão arquivados?' }
+                        ]
+                    }
+                ]
+            },
+            'pop06': {
+                title: "SELEÇÃO DE MATÉRIAS-PRIMAS E EMBALAGENS",
+                subtitle: "Baseado no POP 06 - Revisão 00 - 29/11/2025",
+                date: "29/11/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Avaliação de Matéria-Prima (Recebimento)",
+                        questions: [
+                            { id: 'p06_q1', text: 'Hortifruti (brócolis, couve-flor, pepino, tomate) seguem o padrão de qualidade visual da empresa?' },
+                            { id: 'p06_q2', text: 'Ausência de sinais de deterioração, podridão ou pragas nos vegetais recebidos?' }
+                        ]
+                    },
+                    {
+                        title: "2. Avaliação de Embalagens e Documentação",
+                        questions: [
+                            { id: 'p06_q3', text: 'A Nota Fiscal (NF) e destinatário foram conferidos e estão corretos?' },
+                            { id: 'p06_q4', text: 'O número de volumes físico confere com a nota fiscal?' },
+                            { id: 'p06_q5', text: 'As embalagens/volumes estão íntegros e sem sinais de violação?' },
+                            { id: 'p06_q6', text: 'As informações (origem, descrição, quantidade) conferem com a mercadoria física?' }
+                        ]
+                    },
+                    {
+                        title: "3. Ações Corretivas",
+                        questions: [
+                            { id: 'p06_q7', text: 'Produtos fora do padrão foram devolvidos ou segregados imediatamente?' }
+                        ]
+                    }
+                ]
+            },
+            'pop07': {
+                title: "MANUTENÇÃO PREVENTIVA E CALIBRAÇÃO",
+                subtitle: "Baseado no POP 07 - Revisão 00 - 01/12/2025",
+                date: "01/12/2025",
+                rev: "00",
+                groups: [
+                    {
+                        title: "1. Manutenção de Equipamentos",
+                        questions: [
+                            { id: 'p07_q1', text: 'A manutenção é realizada conforme necessidade (corretiva ou preventiva)?' },
+                            { id: 'p07_q2', text: 'Manutenção de Câmaras Frias está em dia?' },
+                            { id: 'p07_q3', text: 'As Ordens de Serviço (OS) e Notas Fiscais das manutenções estão arquivadas?' }
+                        ]
+                    },
+                    {
+                        title: "2. Calibração (Balanças e Termômetros)",
+                        questions: [
+                            { id: 'p07_q4', text: 'Calibração das Balanças está em dia (Anual)?' },
+                            { id: 'p07_q5', text: 'Calibração dos Termômetros está em dia (Anual)?' },
+                            { id: 'p07_q6', text: 'Possui os Certificados/Laudos de Calibração emitidos por empresa autorizada/Inmetro?' }
+                        ]
+                    },
+                    {
+                        title: "3. Ações Corretivas e Verificação",
+                        questions: [
+                            { id: 'p07_q7', text: 'Equipamentos descalibrados tiveram operação suspensa imediatamente?' },
+                            { id: 'p07_q8', text: 'Foi realizada substituição ou manutenção de equipamento com defeito?' }
+                        ]
+                    }
+                ]
+            },
+            'pop05': {
+                title: "POP 05 - EM BREVE (PENDENTE)",
+                subtitle: "Aguardando envio do arquivo...",
+                date: "--/--/----",
+                rev: "--",
+                groups: [
+                    {
+                        title: "Aguardando Conteúdo",
+                        questions: [
+                            { id: 'p05_q1', text: 'Este questionário será o último a ser adicionado.' }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Removido: Definir data de hoje se vazio
+            // const dateInput = document.getElementById('data');
+            // if (!dateInput.value) {
+            //     dateInput.valueAsDate = new Date();
+            // }
+
+            // Tentar recuperar último POP selecionado
+            const lastPOP = localStorage.getItem('last_selected_pop');
+            if (lastPOP && popsData[lastPOP]) {
+                document.getElementById('popSelect').value = lastPOP;
+                currentPOP = lastPOP;
+            }
+
+            renderPOP();
+        });
+
+        // --- TROCA DE POP ---
+        function changePOP() {
+            currentPOP = document.getElementById('popSelect').value;
+            localStorage.setItem('last_selected_pop', currentPOP);
+            renderPOP();
+        }
+
+        // --- RENDERIZAÇÃO DO CONTEÚDO ---
+        function renderPOP() {
+            const data = popsData[currentPOP];
+            
+            // Atualizar Textos do Cabeçalho
+            document.getElementById('report-title').innerText = data.title;
+            document.getElementById('report-subtitle').innerText = data.subtitle;
+            document.getElementById('pop-date').innerText = data.date;
+            document.getElementById('pop-rev').innerText = data.rev;
+            document.getElementById('current-pop-label').innerText = currentPOP.toUpperCase();
+
+            // Limpar Conteúdo Anterior
+            const contentDiv = document.getElementById('dynamic-content');
+            contentDiv.innerHTML = '';
+
+            // Gerar Grupos e Perguntas
+            data.groups.forEach(group => {
+                const section = document.createElement('section');
+                section.className = "page-break mb-8 print:mb-4"; // Margem reduzida na impressão
+                
+                section.innerHTML = `
+                    <h3 class="text-lg font-bold text-blue-800 border-l-4 border-blue-600 pl-3 mb-4 bg-blue-50 py-2">
+                        ${group.title}
+                    </h3>
+                    <div class="space-y-4 print:space-y-2" id="group-${group.title.replace(/\s+/g, '-')}"></div>
+                `;
+                
+                contentDiv.appendChild(section);
+
+                const groupContainer = section.querySelector(`div[id^="group-"]`);
+                
+                group.questions.forEach(q => {
+                    const html = `
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow question-container">
+                        <p class="font-medium text-gray-800 mb-2 text-sm md:text-base">${q.text}</p>
+                        
+                        <!-- Opções -->
+                        <div class="flex flex-wrap gap-2 mb-3 print:mb-1">
+                            <!-- Conforme -->
+                            <div>
+                                <input type="radio" name="${q.id}" id="${q.id}_C" value="C" class="hidden radio-option" onchange="saveProgress()">
+                                <label for="${q.id}_C" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition select-none flex items-center gap-1 radio-label">
+                                    <i data-lucide="check-circle" class="w-4 h-4 print:hidden"></i> C
+                                </label>
+                            </div>
+
+                            <!-- Não Conforme -->
+                            <div>
+                                <input type="radio" name="${q.id}" id="${q.id}_NC" value="NC" class="hidden radio-option" onchange="saveProgress()">
+                                <label for="${q.id}_NC" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition select-none flex items-center gap-1 radio-label">
+                                    <i data-lucide="x-circle" class="w-4 h-4 print:hidden"></i> NC
+                                </label>
+                            </div>
+
+                            <!-- Não se Aplica -->
+                            <div>
+                                <input type="radio" name="${q.id}" id="${q.id}_NA" value="NA" class="hidden radio-option" onchange="saveProgress()">
+                                <label for="${q.id}_NA" class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition select-none radio-label">
+                                    NA
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo de Observação (Textarea) -->
+                        <div class="mt-2">
+                            <textarea id="obs_${q.id}" rows="2" placeholder="Observações..." class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
+                        </div>
+                    </div>
+                    `;
+                    groupContainer.insertAdjacentHTML('beforeend', html);
+                });
+            });
+
+            lucide.createIcons();
+            loadProgress(); // Carrega respostas salvas deste POP
+            updateStats();
+        }
+
+        // --- SALVAMENTO E CARREGAMENTO (NAMESPACE POR POP) ---
+        function saveProgress() {
+            const dateInput = document.getElementById('data');
+            // Verificar se há valor na data e adicionar classe para controle CSS
+            if (dateInput.value) {
+                dateInput.classList.add('has-value');
+            } else {
+                dateInput.classList.remove('has-value');
+            }
+
+            const storageKey = `data_${currentPOP}`; // Chave única por POP (ex: data_pop01)
+            
+            const data = {
+                meta: {
+                    responsavel: document.getElementById('responsavel').value,
+                    setor: document.getElementById('setor').value,
+                    data: dateInput.value,
+                    obsGeral: document.getElementById('obs-geral').value,
+                    aprovadoPor: document.getElementById('aprovado-por').value
+                },
+                answers: {}
+            };
+
+            // Coletar respostas apenas do POP atual
+            popsData[currentPOP].groups.forEach(group => {
+                group.questions.forEach(q => {
+                    const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                    const obs = document.getElementById(`obs_${q.id}`)?.value;
+                    if (selected || obs) {
+                        data.answers[q.id] = {
+                            val: selected ? selected.value : null,
+                            obs: obs
+                        };
+                    }
+                });
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            updateStats();
+        }
+
+        function loadProgress() {
+            const storageKey = `data_${currentPOP}`;
+            const saved = localStorage.getItem(storageKey);
+            
+            // Limpar formulário visualmente antes de carregar
+            document.getElementById('responsavel').value = '';
+            document.getElementById('setor').value = '';
+            const dateInput = document.getElementById('data');
+            dateInput.value = ''; 
+            dateInput.classList.remove('has-value'); // Remove classe se vazio
+            document.getElementById('obs-geral').value = '';
+            document.getElementById('aprovado-por').value = '';
+            
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                if(data.meta) {
+                    document.getElementById('responsavel').value = data.meta.responsavel || '';
+                    document.getElementById('setor').value = data.meta.setor || '';
+                    if(data.meta.data) {
+                        dateInput.value = data.meta.data;
+                        dateInput.classList.add('has-value'); // Adiciona classe se tiver valor
+                    }
+                    document.getElementById('obs-geral').value = data.meta.obsGeral || '';
+                    document.getElementById('aprovado-por').value = data.meta.aprovadoPor || '';
+                }
+
+                if(data.answers) {
+                    Object.keys(data.answers).forEach(key => {
+                        const item = data.answers[key];
+                        if (item.val) {
+                            const radio = document.getElementById(`${key}_${item.val}`);
+                            if (radio) radio.checked = true;
+                        }
+                        if (item.obs) {
+                            const obsInput = document.getElementById(`obs_${key}`);
+                            if (obsInput) obsInput.value = item.obs;
+                        }
+                    });
+                }
+            }
+        }
+
+        function updateStats() {
+            let totalApplicable = 0;
+            let compliant = 0;
+            let nonCompliant = 0;
+
+            popsData[currentPOP].groups.forEach(group => {
+                group.questions.forEach(q => {
+                    const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                    if (selected) {
+                        if (selected.value === 'C') {
+                            compliant++;
+                            totalApplicable++;
+                        } else if (selected.value === 'NC') {
+                            nonCompliant++;
+                            totalApplicable++;
+                        }
+                    }
+                });
+            });
+
+            const percentage = totalApplicable === 0 ? 0 : Math.round((compliant / totalApplicable) * 100);
+            
+            const scoreEl = document.getElementById('score-display');
+            scoreEl.innerText = `${percentage}%`;
+            
+            if(percentage >= 90) scoreEl.className = "text-2xl font-bold text-green-600";
+            else if(percentage >= 70) scoreEl.className = "text-2xl font-bold text-yellow-600";
+            else scoreEl.className = "text-2xl font-bold text-red-600";
+
+            document.getElementById('count-c').innerText = compliant;
+            document.getElementById('count-nc').innerText = nonCompliant;
+        }
+
+        function resetForm() {
+            if(confirm(`Tem certeza que deseja limpar as respostas do ${currentPOP.toUpperCase()}?`)) {
+                localStorage.removeItem(`data_${currentPOP}`);
+                renderPOP(); // Re-renderiza para limpar visualmente
+            }
+        }
+    </script>
+</body>
+</html>
