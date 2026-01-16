@@ -21,18 +21,16 @@
         /* Estilos específicos para impressão */
         @media print {
             @page {
-                margin: 1cm; /* Margens estreitas */
+                margin: 1cm; /* Margens estreitas para aproveitar a folha */
                 size: A4;
             }
 
-            html, body {
-                height: auto;
+            body, html {
                 background: white;
                 color: black;
-                font-size: 10pt; /* Fonte levemente menor para caber mais */
+                font-size: 10pt; /* Fonte um pouco menor para caber mais */
                 margin: 0;
                 padding: 0;
-                overflow: visible;
             }
 
             .no-print { display: none !important; }
@@ -51,6 +49,7 @@
                 width: auto;
                 display: inline-block;
                 font-size: 10pt;
+                line-height: 1.2;
             }
 
             /* TRUQUE PARA ESCONDER dd/mm/aaaa NA IMPRESSÃO */
@@ -60,24 +59,25 @@
             
             /* Ajuste da TextArea na impressão */
             textarea { 
-                border: 1px solid #bbb !important; 
+                border: 1px solid #999 !important; 
                 resize: none;
                 background: transparent;
-                min-height: 1.8cm !important; /* Altura otimizada: cabe escrita mas economiza papel */
+                min-height: 1.8cm !important; /* Altura compacta mas suficiente */
                 box-shadow: none !important;
                 margin-top: 2px !important;
                 display: block !important;
                 page-break-inside: avoid;
                 font-size: 10pt;
+                width: 100%;
             }
 
             /* Container da pergunta */
             .question-container {
-                page-break-inside: avoid; /* A pergunta individual não quebra */
+                page-break-inside: avoid; /* A pergunta individual não quebra no meio */
                 border: none !important; 
                 padding: 0.1cm 0 !important; 
                 box-shadow: none !important;
-                margin-bottom: 0.1cm !important;
+                margin-bottom: 0.2cm !important;
                 border-bottom: 1px dashed #ccc !important; 
             }
 
@@ -92,18 +92,17 @@
             
             /* Reduzir espaçamento vertical entre elementos */
             .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; } 
-            .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
-
+            
             /* Cabeçalhos de seção */
             h3 { 
                 font-size: 11pt !important; 
-                margin-top: 0.5cm !important;
-                margin-bottom: 0.2cm !important; 
+                margin-top: 0.3cm !important; /* Espaço antes do título */
+                margin-bottom: 0.1cm !important; 
                 padding: 0.1cm !important;
                 background-color: #f0f0f0 !important; 
                 color: #000 !important;
                 border-left: 3px solid #000 !important;
-                page-break-after: avoid; 
+                page-break-after: avoid; /* Título gruda no conteúdo */
             }
 
             /* Botões de opção (C/NC/NA) */
@@ -122,7 +121,6 @@
             section { 
                 page-break-inside: auto !important; 
                 page-break-after: auto !important; 
-                page-break-before: auto !important;
                 margin-bottom: 0 !important;
                 display: block !important;
             }
@@ -130,12 +128,23 @@
             /* Esconder ícones decorativos na impressão */
             i[data-lucide] { display: none !important; }
             
-            /* Ajuste de layout do cabeçalho */
-            .header-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5cm; margin-top: 0.2cm; }
-            .header-full { grid-column: span 2; }
+            /* Ajuste de layout do cabeçalho para ser horizontal */
+            .header-info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr; /* 3 colunas */
+                gap: 10px;
+                margin-top: 10px;
+                font-size: 9pt;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .header-info-item label { font-weight: bold; display: block; }
+            .header-info-item input { width: 100%; }
         }
         
-        /* Estilos de tela */
+        /* Estilos de tela (Screen) */
         .radio-option:checked + label {
             background-color: #2563eb;
             color: white;
@@ -166,7 +175,7 @@
 
     <main class="max-w-4xl mx-auto p-4 md:p-8 bg-white shadow-xl mt-4 mb-8 rounded-lg print:shadow-none print:mt-0 print:w-full">
         
-        <!-- SELEÇÃO DE POP (Dropdown) -->
+        <!-- SELEÇÃO DE POP (Dropdown - Não imprime) -->
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-8 no-print">
             <div class="mb-4">
                 <label class="block text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
@@ -195,15 +204,15 @@
             </div>
         </div>
 
-        <!-- Cabeçalho do Relatório -->
-        <div class="border-b-2 border-gray-200 pb-4 mb-4 print:mb-2 print:pb-2 print:border-b">
-            <div class="flex justify-between items-start">
+        <!-- Cabeçalho do Relatório (Impresso) -->
+        <div class="print:block">
+            <div class="flex justify-between items-start mb-4 print:mb-2">
                 <div class="flex items-center gap-4">
-                    <!-- Logo para Impressão -->
-                    <img src="https://i.imgur.com/O44kome.png" alt="Logo" class="h-20 w-auto hidden print:block">
+                    <!-- Logo (Aparece na impressão) -->
+                    <img src="https://i.imgur.com/O44kome.png" alt="Logo" class="h-16 w-auto hidden print:block">
                     
                     <div>
-                        <!-- Título Dinâmico -->
+                        <!-- Título -->
                         <h2 id="report-title" class="text-2xl font-bold text-gray-800 uppercase print:text-lg print:leading-tight">Lista de Verificação</h2>
                         <p id="report-subtitle" class="text-gray-500 text-sm mt-1 print:text-xs">Selecione um POP acima</p>
                     </div>
@@ -214,30 +223,49 @@
                 </div>
             </div>
 
-            <!-- Grid de Inputs Otimizado para Impressão -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 print:mt-2 print:gap-x-4 print:gap-y-1 header-grid">
+            <!-- Grid de Informações (Otimizado para Impressão Horizontal) -->
+            <!-- Na tela: vertical/grid normal. Na impressão: Grid horizontal compacto -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 print:hidden">
+                <!-- Layout de TELA -->
                 <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1 print:text-xs print:mb-0">Responsável:</label>
-                    <input type="text" id="responsavel" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none print:p-0 print:h-6" placeholder="" oninput="saveProgress()">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Responsável pela Avaliação:</label>
+                    <input type="text" id="responsavel-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="syncInputs('responsavel', this.value)">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1 print:text-xs print:mb-0">Data:</label>
-                    <input type="date" id="data" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none print:p-0 print:h-6" oninput="saveProgress()">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Data da Avaliação:</label>
+                    <input type="date" id="data-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" oninput="syncInputs('data', this.value)">
                 </div>
-                <div class="md:col-span-2 header-full">
-                    <label class="block text-sm font-semibold text-gray-600 mb-1 print:text-xs print:mb-0">Setor Avaliado:</label>
-                    <input type="text" id="setor" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none print:p-0 print:h-6" placeholder="" oninput="saveProgress()">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Setor Avaliado:</label>
+                    <input type="text" id="setor-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="syncInputs('setor', this.value)">
+                </div>
+            </div>
+
+            <!-- Layout APENAS DE IMPRESSÃO (Compacto) -->
+            <div class="hidden print:grid header-info-grid">
+                <div class="header-info-item">
+                    <label>Responsável:</label>
+                    <input type="text" id="responsavel-print" placeholder="__________________________">
+                </div>
+                <div class="header-info-item">
+                    <label>Data:</label>
+                    <input type="date" id="data-print">
+                </div>
+                <div class="header-info-item">
+                    <label>Setor:</label>
+                    <input type="text" id="setor-print" placeholder="__________________________">
                 </div>
             </div>
         </div>
 
         <!-- Área Dinâmica dos Questionários -->
         <form id="checklistForm" class="space-y-8 print:space-y-0">
-            <!-- LEGENDA DAS SIGLAS (ADICIONADO) -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm text-blue-800 print:bg-white print:border print:border-gray-300 print:text-gray-600 print:text-xs print:mb-2">
+            
+            <!-- Legenda (Opcional na impressão se quiser economizar espaço, mas útil) -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm text-blue-800 print:bg-white print:border print:border-gray-300 print:text-gray-600 print:text-xs print:mb-2 print:p-1 print:border-l-2">
                 <span class="font-bold mr-2">Legenda:</span>
-                <span class="mr-4"><i data-lucide="check-circle" class="w-3 h-3 inline mr-1 print:hidden"></i><strong>C</strong> = Conforme</span>
-                <span class="mr-4"><i data-lucide="x-circle" class="w-3 h-3 inline mr-1 print:hidden"></i><strong>NC</strong> = Não Conforme</span>
+                <span class="mr-4"><strong>C</strong> = Conforme</span>
+                <span class="mr-4"><strong>NC</strong> = Não Conforme</span>
                 <span><strong>NA</strong> = Não Avaliado</span>
             </div>
 
@@ -247,16 +275,17 @@
 
             <!-- Observações Gerais -->
             <section class="mt-8 border-t pt-4 print:mt-4 print:pt-2">
-                <h3 class="text-lg font-bold text-gray-700 mb-2 print:text-sm print:mb-1 print:border-none print:bg-transparent print:p-0">Observações Gerais / Ações Corretivas</h3>
-                <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Descreva aqui as não conformidades encontradas..." oninput="saveProgress()"></textarea>
+                <h3 class="text-lg font-bold text-gray-700 mb-2 print:text-sm print:mb-1 print:bg-transparent print:p-0 print:border-none">Observações Gerais / Ações Corretivas</h3>
+                <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="saveProgress()"></textarea>
             </section>
 
             <!-- Rodapé de Assinatura -->
-            <section class="mt-12 pt-6 border-t-2 border-gray-300 print:mt-6 print:pt-2 print:border-t">
+            <section class="mt-12 pt-6 border-t-2 border-gray-300 print:mt-4 print:pt-2 print:border-t">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 print:gap-4 print:grid-cols-2">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs">Aprovado por:</label>
-                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-6" placeholder="Nome do Responsável/Gerente" oninput="saveProgress()">
+                        <!-- Removido o placeholder para ficar em branco na impressão -->
+                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-6" placeholder="" oninput="saveProgress()">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-8 print:mb-6 print:text-xs">Assinatura:</label>
@@ -284,7 +313,7 @@
         let currentPOP = 'pop01';
         let currentVisibleGroups = []; 
 
-        // --- BANCO DE DADOS DOS POPS ---
+        // --- DADOS (Mantidos iguais aos anteriores) ---
         const popsData = {
             'pop01': {
                 title: "HIGIENE E SAÚDE DOS MANIPULADORES",
@@ -547,6 +576,14 @@
             changePOP();
         });
 
+        // --- SINCRONIZAÇÃO DE CAMPOS (TELA <-> IMPRESSÃO) ---
+        function syncInputs(type, value) {
+            // Atualiza os inputs ocultos de impressão quando digita na tela e vice-versa
+            document.getElementById(`${type}-print`).value = value;
+            document.getElementById(`${type}-screen`).value = value;
+            saveProgress();
+        }
+
         // --- TROCA DE POP E CARREGAMENTO ---
         function changePOP() {
             currentPOP = document.getElementById('popSelect').value;
@@ -556,7 +593,7 @@
             const savedJSON = localStorage.getItem(storageKey);
             const savedData = savedJSON ? JSON.parse(savedJSON) : null;
 
-            // 1. Determinar Grupos Visíveis
+            // 1. Determinar Grupos Visíveis (Inicia VAZIO se não houver salvo)
             if (savedData && savedData.meta && savedData.meta.visibleGroups) {
                 currentVisibleGroups = savedData.meta.visibleGroups;
             } else {
@@ -675,7 +712,9 @@
                         </div>
                         
                         <div class="mt-2">
-                            <textarea id="obs_${q.id}" rows="2" placeholder="Observações..." class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
+                            <!-- Label fora da caixa para não atrapalhar a escrita manual -->
+                            <label for="obs_${q.id}" class="text-xs text-gray-500 font-semibold mb-1 block print:text-black">Observações:</label>
+                            <textarea id="obs_${q.id}" rows="2" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
                         </div>
                     </div>
                     `;
@@ -690,16 +729,29 @@
         // --- PREENCHIMENTO DE DADOS (Load) ---
         function fillFormData(data) {
             if(data.meta) {
-                document.getElementById('responsavel').value = data.meta.responsavel || '';
-                document.getElementById('setor').value = data.meta.setor || '';
+                // Atualizar tanto inputs de tela quanto de impressão
+                const resp = data.meta.responsavel || '';
+                const setor = data.meta.setor || '';
                 
-                const dateInput = document.getElementById('data');
-                if(data.meta.data) {
-                    dateInput.value = data.meta.data;
-                    dateInput.classList.add('has-value');
+                document.getElementById('responsavel-screen').value = resp;
+                document.getElementById('responsavel-print').value = resp;
+                
+                document.getElementById('setor-screen').value = setor;
+                document.getElementById('setor-print').value = setor;
+                
+                const dateVal = data.meta.data || '';
+                const dateScreen = document.getElementById('data-screen');
+                const datePrint = document.getElementById('data-print');
+                
+                dateScreen.value = dateVal;
+                datePrint.value = dateVal;
+                
+                if(dateVal) {
+                    dateScreen.classList.add('has-value');
+                    datePrint.classList.add('has-value');
                 } else {
-                    dateInput.value = '';
-                    dateInput.classList.remove('has-value');
+                    dateScreen.classList.remove('has-value');
+                    datePrint.classList.remove('has-value');
                 }
                 
                 document.getElementById('obs-geral').value = data.meta.obsGeral || '';
@@ -720,10 +772,9 @@
 
         // --- SALVAMENTO (Save) ---
         function saveProgress() {
-            const dateInput = document.getElementById('data');
-            if (dateInput.value) dateInput.classList.add('has-value');
-            else dateInput.classList.remove('has-value');
-
+            // Pegar valor de qualquer um dos inputs de data (estão sincronizados)
+            const dateVal = document.getElementById('data-screen').value;
+            
             const storageKey = `data_${currentPOP}`;
             
             const oldData = JSON.parse(localStorage.getItem(storageKey)) || { answers: {} };
@@ -749,9 +800,9 @@
 
             const data = {
                 meta: {
-                    responsavel: document.getElementById('responsavel').value,
-                    setor: document.getElementById('setor').value,
-                    data: dateInput.value,
+                    responsavel: document.getElementById('responsavel-screen').value,
+                    setor: document.getElementById('setor-screen').value,
+                    data: dateVal,
                     obsGeral: document.getElementById('obs-geral').value,
                     aprovadoPor: document.getElementById('aprovado-por').value,
                     visibleGroups: currentVisibleGroups 
