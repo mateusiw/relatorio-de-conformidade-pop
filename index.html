@@ -6,10 +6,10 @@
     <title>Sistema de Gestão de Qualidade - POPs</title>
     
     <!-- Meta tags para PWA (Aparência de App) -->
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#059669"> <!-- Cor Esmeralda -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/1WtyGvS.png">
 
     <!-- Tailwind CSS (Estilização) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -46,8 +46,8 @@
                 -webkit-appearance: none; 
                 background: transparent; 
                 height: auto;
-                width: auto;
-                display: inline-block;
+                width: 100% !important; /* FORÇAR LARGURA TOTAL PARA A LINHA ESTICAR */
+                display: block;
                 font-size: 10pt;
                 line-height: 1.2;
             }
@@ -129,8 +129,11 @@
             i[data-lucide] { display: none !important; }
             
             /* Ajuste de layout do cabeçalho para ser horizontal */
+            /* IMPORTANTE: Garante que o grid de tela suma na impressão */
+            .screen-only-grid { display: none !important; }
+
             .header-info-grid {
-                display: grid;
+                display: grid !important; /* Força display grid na impressão */
                 grid-template-columns: 1fr 1fr 1fr; /* 3 colunas */
                 gap: 10px;
                 margin-top: 10px;
@@ -146,26 +149,34 @@
         
         /* Estilos de tela (Screen) */
         .radio-option:checked + label {
-            background-color: #2563eb;
+            background-color: #059669; /* Verde Esmeralda */
             color: white;
-            border-color: #2563eb;
+            border-color: #059669;
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-24">
 
     <!-- Cabeçalho (Fixo no topo em mobile) -->
-    <header class="bg-blue-700 text-white shadow-md sticky top-0 z-50 no-print">
+    <header class="bg-emerald-600 text-white shadow-md sticky top-0 z-50 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <h1 class="text-lg font-bold flex items-center gap-2">
-                <i data-lucide="folder-check" class="w-6 h-6"></i>
+                <!-- Usando a logo do imgur também no topo do app -->
+                <img src="https://i.imgur.com/1WtyGvS.png" alt="Logo" class="h-8 w-auto bg-white rounded p-0.5">
                 Gestão de POPs
             </h1>
             <div class="flex gap-2">
-                <button onclick="resetForm()" class="p-2 bg-blue-800 rounded hover:bg-blue-900 transition" title="Limpar Formulário Atual">
+                <button onclick="resetForm()" class="p-2 bg-emerald-700 rounded hover:bg-emerald-800 transition" title="Limpar Formulário Atual">
                     <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                 </button>
-                <button onclick="window.print()" class="p-2 bg-green-500 rounded hover:bg-green-600 transition font-bold flex items-center gap-1">
+                
+                <!-- Botão Exportar CSV -->
+                <button onclick="exportToCSV()" class="p-2 bg-yellow-500 rounded hover:bg-yellow-600 transition font-bold flex items-center gap-1 text-emerald-900" title="Exportar para Excel (CSV)">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                    <span class="hidden sm:inline">Exportar</span>
+                </button>
+
+                <button onclick="window.print()" class="p-2 bg-green-800 rounded hover:bg-green-900 transition font-bold flex items-center gap-1">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                     <span class="hidden sm:inline">Imprimir</span>
                 </button>
@@ -176,12 +187,12 @@
     <main class="max-w-4xl mx-auto p-4 md:p-8 bg-white shadow-xl mt-4 mb-8 rounded-lg print:shadow-none print:mt-0 print:w-full">
         
         <!-- SELEÇÃO DE POP (Dropdown - Não imprime) -->
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-8 no-print">
+        <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mb-8 no-print">
             <div class="mb-4">
-                <label class="block text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
+                <label class="block text-sm font-bold text-emerald-800 mb-2 uppercase tracking-wide">
                     <i data-lucide="library" class="inline w-4 h-4 mr-1"></i> Selecione o Procedimento (POP)
                 </label>
-                <select id="popSelect" onchange="changePOP()" class="w-full p-3 border-2 border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-lg font-medium shadow-sm">
+                <select id="popSelect" onchange="changePOP()" class="w-full p-3 border-2 border-emerald-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white text-lg font-medium shadow-sm">
                     <option value="pop01">POP 01 - HIGIENE E SAÚDE DOS MANIPULADORES</option>
                     <option value="pop02">POP 02 - HIGIENIZAÇÃO DE INSTALAÇÕES E EQUIPAMENTOS</option>
                     <option value="pop03">POP 03 - MANEJO DE RESÍDUOS</option>
@@ -193,8 +204,8 @@
             </div>
 
             <!-- SELEÇÃO DE SUB-GRUPOS (Dinâmico) -->
-            <div id="sub-selection-container" class="border-t border-blue-200 pt-4 hidden">
-                <p class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+            <div id="sub-selection-container" class="border-t border-emerald-200 pt-4 hidden">
+                <p class="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
                     <i data-lucide="list-checks" class="w-4 h-4"></i>
                     Selecione os grupos para avaliar/imprimir:
                 </p>
@@ -208,8 +219,8 @@
         <div class="print:block">
             <div class="flex justify-between items-start mb-4 print:mb-2">
                 <div class="flex items-center gap-4">
-                    <!-- Logo (Aparece na impressão) -->
-                    <img src="https://i.imgur.com/O44kome.png" alt="Logo" class="h-16 w-auto hidden print:block">
+                    <!-- Logo ATUALIZADA (Aparece na impressão) -->
+                    <img src="https://i.imgur.com/1WtyGvS.png" alt="Logo" class="h-20 w-auto hidden print:block">
                     
                     <div>
                         <!-- Título -->
@@ -224,20 +235,20 @@
             </div>
 
             <!-- Grid de Informações (Otimizado para Impressão Horizontal) -->
-            <!-- Na tela: vertical/grid normal. Na impressão: Grid horizontal compacto -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 print:hidden">
+            <!-- Adicionei a classe "screen-only-grid" para garantir que suma na impressão -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 screen-only-grid">
                 <!-- Layout de TELA -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Responsável pela Avaliação:</label>
-                    <input type="text" id="responsavel-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="syncInputs('responsavel', this.value)">
+                    <input type="text" id="responsavel-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="" oninput="syncInputs('responsavel', this.value)">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Data da Avaliação:</label>
-                    <input type="date" id="data-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" oninput="syncInputs('data', this.value)">
+                    <input type="date" id="data-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none" oninput="syncInputs('data', this.value)">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Setor Avaliado:</label>
-                    <input type="text" id="setor-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="syncInputs('setor', this.value)">
+                    <input type="text" id="setor-screen" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="" oninput="syncInputs('setor', this.value)">
                 </div>
             </div>
 
@@ -245,7 +256,7 @@
             <div class="hidden print:grid header-info-grid">
                 <div class="header-info-item">
                     <label>Responsável:</label>
-                    <input type="text" id="responsavel-print" placeholder="__________________________">
+                    <input type="text" id="responsavel-print">
                 </div>
                 <div class="header-info-item">
                     <label>Data:</label>
@@ -253,7 +264,7 @@
                 </div>
                 <div class="header-info-item">
                     <label>Setor:</label>
-                    <input type="text" id="setor-print" placeholder="__________________________">
+                    <input type="text" id="setor-print">
                 </div>
             </div>
         </div>
@@ -262,7 +273,7 @@
         <form id="checklistForm" class="space-y-8 print:space-y-0">
             
             <!-- Legenda (Opcional na impressão se quiser economizar espaço, mas útil) -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm text-blue-800 print:bg-white print:border print:border-gray-300 print:text-gray-600 print:text-xs print:mb-2 print:p-1 print:border-l-2">
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 p-3 mb-4 rounded text-sm text-emerald-800 print:bg-white print:border print:border-gray-300 print:text-gray-600 print:text-xs print:mb-2 print:p-1 print:border-l-2">
                 <span class="font-bold mr-2">Legenda:</span>
                 <span class="mr-4"><strong>C</strong> = Conforme</span>
                 <span class="mr-4"><strong>NC</strong> = Não Conforme</span>
@@ -276,7 +287,7 @@
             <!-- Observações Gerais -->
             <section class="mt-8 border-t pt-4 print:mt-4 print:pt-2">
                 <h3 class="text-lg font-bold text-gray-700 mb-2 print:text-sm print:mb-1 print:bg-transparent print:p-0 print:border-none">Observações Gerais / Ações Corretivas</h3>
-                <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="" oninput="saveProgress()"></textarea>
+                <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="" oninput="saveProgress()"></textarea>
             </section>
 
             <!-- Rodapé de Assinatura -->
@@ -285,11 +296,12 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs">Aprovado por:</label>
                         <!-- Removido o placeholder para ficar em branco na impressão -->
-                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-6" placeholder="" oninput="saveProgress()">
+                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8" placeholder="" oninput="saveProgress()">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-8 print:mb-6 print:text-xs">Assinatura:</label>
-                        <div class="border-b-2 border-black w-full h-8 print:h-4 print:border-b"></div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs">Assinatura:</label>
+                        <!-- Campo digitável para assinatura (text), sem o disabled -->
+                        <input type="text" id="assinatura-digital" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8" placeholder="" oninput="saveProgress()">
                     </div>
                 </div>
             </section>
@@ -301,7 +313,7 @@
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <div>
                 <span class="text-sm text-gray-500">Conformidade (<span id="current-pop-label">POP --</span>):</span>
-                <div class="text-2xl font-bold text-blue-600" id="score-display">0%</div>
+                <div class="text-2xl font-bold text-emerald-600" id="score-display">0%</div>
             </div>
             <div class="text-right text-xs text-gray-400">
                 Itens Conformes: <span id="count-c">0</span> | Não Conformes: <span id="count-nc">0</span>
@@ -624,8 +636,8 @@
                 
                 const div = document.createElement('div');
                 div.innerHTML = `
-                    <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded border border-blue-100 hover:bg-blue-50 transition select-none shadow-sm">
-                        <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" 
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded border border-emerald-100 hover:bg-emerald-50 transition select-none shadow-sm">
+                        <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500" 
                             value="${index}" onchange="toggleGroup(${index})" ${isChecked}>
                         <span class="text-gray-700 font-medium text-sm">${group.title}</span>
                     </label>
@@ -675,7 +687,7 @@
                 section.className = "mb-8 print:mb-4"; 
                 
                 section.innerHTML = `
-                    <h3 class="text-lg font-bold text-blue-800 border-l-4 border-blue-600 pl-3 mb-4 bg-blue-50 py-2">
+                    <h3 class="text-lg font-bold text-emerald-800 border-l-4 border-emerald-600 pl-3 mb-4 bg-emerald-50 py-2">
                         ${group.title}
                     </h3>
                     <div class="space-y-4 print:space-y-2" id="group-${index}"></div>
@@ -714,7 +726,7 @@
                         <div class="mt-2">
                             <!-- Label fora da caixa para não atrapalhar a escrita manual -->
                             <label for="obs_${q.id}" class="text-xs text-gray-500 font-semibold mb-1 block print:text-black">Observações:</label>
-                            <textarea id="obs_${q.id}" rows="2" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
+                            <textarea id="obs_${q.id}" rows="2" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none bg-gray-50" oninput="saveProgress()"></textarea>
                         </div>
                     </div>
                     `;
@@ -756,6 +768,7 @@
                 
                 document.getElementById('obs-geral').value = data.meta.obsGeral || '';
                 document.getElementById('aprovado-por').value = data.meta.aprovadoPor || '';
+                document.getElementById('assinatura-digital').value = data.meta.assinaturaDigital || ''; // Carregar assinatura texto
             }
 
             if(data.answers) {
@@ -779,7 +792,7 @@
             
             const oldData = JSON.parse(localStorage.getItem(storageKey)) || { answers: {} };
             const newAnswers = { ...oldData.answers }; 
-
+            
             popsData[currentPOP].groups.forEach((group, index) => {
                 if(currentVisibleGroups.includes(index)) {
                     group.questions.forEach(q => {
@@ -805,13 +818,85 @@
                     data: dateVal,
                     obsGeral: document.getElementById('obs-geral').value,
                     aprovadoPor: document.getElementById('aprovado-por').value,
-                    visibleGroups: currentVisibleGroups 
+                    assinaturaDigital: document.getElementById('assinatura-digital').value, // Salvar o campo de texto
+                    visibleGroups: currentVisibleGroups
                 },
                 answers: newAnswers
             };
 
             localStorage.setItem(storageKey, JSON.stringify(data));
             updateStats();
+        }
+
+        // --- EXPORTAR CSV ---
+        function exportToCSV() {
+            const dataStr = localStorage.getItem(`data_${currentPOP}`);
+            if(!dataStr) {
+                alert("Nenhum dado salvo para exportar neste POP.");
+                return;
+            }
+            
+            const data = JSON.parse(dataStr);
+            const popInfo = popsData[currentPOP];
+            const rows = [];
+            
+            // Cabeçalho do CSV
+            rows.push(['POP', 'Titulo POP', 'Data Avaliacao', 'Responsavel', 'Setor', 'Aprovado Por', 'Assinatura', 'Grupo', 'Pergunta ID', 'Pergunta', 'Resposta', 'Observacao']);
+            
+            // Dados Meta
+            const metaBase = [
+                currentPOP.toUpperCase(), 
+                popInfo.title, 
+                data.meta.data || '', 
+                data.meta.responsavel || '', 
+                data.meta.setor || '',
+                data.meta.aprovadoPor || '',
+                data.meta.assinaturaDigital || ''
+            ];
+
+            // Iterar sobre as respostas
+            if(data.answers) {
+                // Percorrer todas as perguntas do POP atual para garantir ordem
+                popInfo.groups.forEach(group => {
+                    group.questions.forEach(q => {
+                        const ans = data.answers[q.id];
+                        if(ans) {
+                            // Mapear valor (C/NC/NA) para texto legível se necessário, ou manter sigla
+                            const resposta = ans.val || ''; 
+                            const obs = ans.obs ? ans.obs.replace(/\n/g, ' ') : ''; // Remover quebras de linha da obs
+                            
+                            // Adicionar linha
+                            rows.push([...metaBase, group.title, q.id, q.text, resposta, obs]);
+                        }
+                    });
+                });
+            }
+            
+            // Adicionar Observação Geral se houver
+            if(data.meta.obsGeral) {
+                 rows.push([...metaBase, 'Geral', 'OBS_GERAL', 'Observações Gerais', '', data.meta.obsGeral.replace(/\n/g, ' ')]);
+            }
+
+            // Converter para string CSV
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM para acentos
+            rows.forEach(rowArray => {
+                const row = rowArray.map(item => {
+                    // Escapar aspas duplas e envolver em aspas se tiver vírgula
+                    const str = String(item).replace(/"/g, '""');
+                    return `"${str}"`;
+                }).join(",");
+                csvContent += row + "\r\n";
+            });
+
+            // Download
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `Relatorio_${currentPOP.toUpperCase()}_${data.meta.data || 'sem_data'}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function updateStats() {
@@ -841,7 +926,7 @@
             const scoreEl = document.getElementById('score-display');
             scoreEl.innerText = `${percentage}%`;
             
-            if(percentage >= 90) scoreEl.className = "text-2xl font-bold text-green-600";
+            if(percentage >= 90) scoreEl.className = "text-2xl font-bold text-emerald-600";
             else if(percentage >= 70) scoreEl.className = "text-2xl font-bold text-yellow-600";
             else scoreEl.className = "text-2xl font-bold text-red-600";
 
