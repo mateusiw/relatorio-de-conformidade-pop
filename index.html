@@ -21,14 +21,14 @@
         /* Estilos específicos para impressão */
         @media print {
             @page {
-                margin: 1cm; /* Margens estreitas para aproveitar a folha */
+                margin: 0.5cm; /* Margens AINDA MAIS estreitas para caber tudo */
                 size: A4;
             }
 
             body, html {
                 background: white;
                 color: black;
-                font-size: 10pt; /* Fonte um pouco menor para caber mais */
+                font-size: 9.5pt; /* Fonte levemente menor para garantir encaixe */
                 margin: 0;
                 padding: 0;
             }
@@ -36,20 +36,23 @@
             .no-print { display: none !important; }
             .print-border { border: 1px solid #ccc; }
             
-            /* Inputs e Selects na impressão */
+            /* CORREÇÃO DA LINHA DUPLA: Reset total dos inputs na impressão */
             input[type="text"], input[type="date"], select { 
-                border: none; 
-                border-bottom: 1px solid #000; 
-                padding: 0; 
-                margin: 0;
-                appearance: none; 
-                -webkit-appearance: none; 
-                background: transparent; 
-                height: auto;
-                width: 100% !important; /* FORÇAR LARGURA TOTAL PARA A LINHA ESTICAR */
-                display: block;
-                font-size: 10pt;
-                line-height: 1.2;
+                border: none !important; 
+                border-bottom: 1px solid #000 !important; /* Apenas linha inferior preta */
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important; 
+                margin: 0 !important;
+                appearance: none !important; 
+                -webkit-appearance: none !important; 
+                height: 20px !important; /* Altura fixa para alinhar */
+                width: 100% !important; 
+                display: block !important;
+                font-size: 9.5pt !important;
+                line-height: 1.1 !important;
+                border-radius: 0 !important; /* Remove arredondamento padrão */
             }
 
             /* TRUQUE PARA ESCONDER dd/mm/aaaa NA IMPRESSÃO */
@@ -62,22 +65,23 @@
                 border: 1px solid #999 !important; 
                 resize: none;
                 background: transparent;
-                min-height: 1.8cm !important; /* Altura compacta mas suficiente */
+                min-height: 1.5cm !important; /* Altura REDUZIDA para economizar papel */
                 box-shadow: none !important;
                 margin-top: 2px !important;
                 display: block !important;
                 page-break-inside: avoid;
-                font-size: 10pt;
+                font-size: 9pt; 
                 width: 100%;
+                line-height: 1.2;
             }
 
             /* Container da pergunta */
             .question-container {
-                page-break-inside: avoid; /* A pergunta individual não quebra no meio */
+                page-break-inside: avoid; 
                 border: none !important; 
-                padding: 0.1cm 0 !important; 
+                padding: 2px 0 !important; /* Menos padding */
                 box-shadow: none !important;
-                margin-bottom: 0.2cm !important;
+                margin-bottom: 2px !important; /* Menos margem */
                 border-bottom: 1px dashed #ccc !important; 
             }
 
@@ -95,14 +99,14 @@
             
             /* Cabeçalhos de seção */
             h3 { 
-                font-size: 11pt !important; 
-                margin-top: 0.3cm !important; /* Espaço antes do título */
+                font-size: 10.5pt !important; 
+                margin-top: 0.2cm !important; 
                 margin-bottom: 0.1cm !important; 
-                padding: 0.1cm !important;
+                padding: 2px !important;
                 background-color: #f0f0f0 !important; 
                 color: #000 !important;
                 border-left: 3px solid #000 !important;
-                page-break-after: avoid; /* Título gruda no conteúdo */
+                page-break-after: avoid; 
             }
 
             /* Botões de opção (C/NC/NA) */
@@ -110,8 +114,8 @@
                 border: 1px solid #000 !important;
                 color: #000 !important;
                 background: none !important;
-                padding: 1px 6px !important;
-                font-size: 9pt !important;
+                padding: 0 4px !important;
+                font-size: 8pt !important;
                 border-radius: 4px !important;
             }
 
@@ -133,18 +137,43 @@
             .screen-only-grid { display: none !important; }
 
             .header-info-grid {
-                display: grid !important; /* Força display grid na impressão */
-                grid-template-columns: 1fr 1fr 1fr; /* 3 colunas */
-                gap: 10px;
-                margin-top: 10px;
+                display: grid !important; 
+                grid-template-columns: 1fr 1fr 1fr; 
+                gap: 8px;
+                margin-top: 5px; 
                 font-size: 9pt;
-                border-bottom: 2px solid #000;
-                padding-bottom: 10px;
-                margin-bottom: 10px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 5px; 
+                margin-bottom: 5px; 
             }
             
-            .header-info-item label { font-weight: bold; display: block; }
-            .header-info-item input { width: 100%; }
+            .header-info-item label { font-weight: bold; display: block; margin-bottom: 0;}
+            .header-info-item input { width: 100%; height: 16px; }
+
+            /* ESTILOS DE RODAPÉ REDUZIDOS - MAIS COMPACTO AINDA */
+            .footer-section {
+                margin-top: 0.2cm !important; 
+                padding-top: 0.1cm !important;
+                border-top: 1px solid #ccc !important;
+                page-break-inside: avoid; 
+            }
+            
+            .footer-label {
+                font-size: 8pt !important; 
+                margin-bottom: 0 !important;
+            }
+            
+            .footer-input {
+                font-size: 9pt !important; 
+                height: 0.5cm !important; 
+                padding: 0 !important;
+            }
+            
+            /* Título do Relatório */
+            #report-title { font-size: 14pt !important; margin: 0; }
+            #report-subtitle { font-size: 9pt !important; margin: 0; }
+            .logo-print { height: 1.5cm !important; } /* Logo menor */
+            .header-container { margin-bottom: 0 !important; padding-bottom: 0 !important; border-bottom: none !important;}
         }
         
         /* Estilos de tela (Screen) */
@@ -216,11 +245,11 @@
         </div>
 
         <!-- Cabeçalho do Relatório (Impresso) -->
-        <div class="print:block">
-            <div class="flex justify-between items-start mb-4 print:mb-2">
+        <div class="print:block header-container border-b-2 border-gray-200 pb-4 mb-4 print:mb-1 print:pb-1">
+            <div class="flex justify-between items-start mb-4 print:mb-1">
                 <div class="flex items-center gap-4">
                     <!-- Logo ATUALIZADA (Aparece na impressão) -->
-                    <img src="https://i.imgur.com/1WtyGvS.png" alt="Logo" class="h-20 w-auto hidden print:block">
+                    <img src="https://i.imgur.com/1WtyGvS.png" alt="Logo" class="h-20 w-auto hidden print:block logo-print">
                     
                     <div>
                         <!-- Título -->
@@ -235,7 +264,7 @@
             </div>
 
             <!-- Grid de Informações (Otimizado para Impressão Horizontal) -->
-            <!-- Adicionei a classe "screen-only-grid" para garantir que suma na impressão -->
+            <!-- Na tela: vertical/grid normal. Na impressão: Grid horizontal compacto -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 screen-only-grid">
                 <!-- Layout de TELA -->
                 <div>
@@ -256,7 +285,7 @@
             <div class="hidden print:grid header-info-grid">
                 <div class="header-info-item">
                     <label>Responsável:</label>
-                    <input type="text" id="responsavel-print">
+                    <input type="text" id="responsavel-print" placeholder="">
                 </div>
                 <div class="header-info-item">
                     <label>Data:</label>
@@ -264,7 +293,7 @@
                 </div>
                 <div class="header-info-item">
                     <label>Setor:</label>
-                    <input type="text" id="setor-print">
+                    <input type="text" id="setor-print" placeholder="">
                 </div>
             </div>
         </div>
@@ -285,23 +314,23 @@
             </div>
 
             <!-- Observações Gerais -->
-            <section class="mt-8 border-t pt-4 print:mt-4 print:pt-2">
+            <section class="mt-8 border-t pt-4 print:mt-2 print:pt-1">
                 <h3 class="text-lg font-bold text-gray-700 mb-2 print:text-sm print:mb-1 print:bg-transparent print:p-0 print:border-none">Observações Gerais / Ações Corretivas</h3>
                 <textarea id="obs-geral" rows="4" class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="" oninput="saveProgress()"></textarea>
             </section>
 
             <!-- Rodapé de Assinatura -->
-            <section class="mt-12 pt-6 border-t-2 border-gray-300 print:mt-4 print:pt-2 print:border-t">
+            <section class="mt-12 pt-6 border-t-2 border-gray-300 print:mt-2 print:pt-2 print:border-t footer-section">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 print:gap-4 print:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs">Aprovado por:</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs footer-label">Aprovado por:</label>
                         <!-- Removido o placeholder para ficar em branco na impressão -->
-                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8" placeholder="" oninput="saveProgress()">
+                        <input type="text" id="aprovado-por" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 footer-input" placeholder="" oninput="saveProgress()">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs">Assinatura:</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs footer-label">Assinatura:</label>
                         <!-- Campo digitável para assinatura (text), sem o disabled -->
-                        <input type="text" id="assinatura-digital" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8" placeholder="" oninput="saveProgress()">
+                        <input type="text" id="assinatura-digital" class="w-full p-2 border-b-2 border-black bg-gray-50 focus:bg-white focus:border-emerald-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 footer-input" placeholder="" oninput="saveProgress()">
                     </div>
                 </div>
             </section>
