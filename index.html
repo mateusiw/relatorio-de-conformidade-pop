@@ -650,7 +650,7 @@
                                     <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Status</label>
                                     <select id="detail-status" class="w-full p-2 border border-gray-300 rounded text-xs font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="applyFilters()">
                                         <option value="all">Todos</option>
-                                        <option value="PENDENTE">Pendentes</option>
+                                        <option value="PENDENTE" selected>Pendentes</option>
                                         <option value="EM_ANDAMENTO">Em Andamento</option>
                                         <option value="RESOLVIDO">Resolvidos</option>
                                     </select>
@@ -1206,6 +1206,8 @@
             document.getElementById('filter-pop').value = 'all';
             updateQuestionFilter();
             document.getElementById('filter-pergunta').value = 'all';
+            const detailStatus = document.getElementById('detail-status');
+            if (detailStatus) detailStatus.value = 'PENDENTE';
             applyFilters();
         }
 
@@ -1516,7 +1518,7 @@
             accordionContainer.innerHTML = ''; 
             
             const detalheSort = document.getElementById('detail-sort')?.value || 'recentes';
-            const detalheStatus = document.getElementById('detail-status')?.value || 'all';
+            const detalheStatus = document.getElementById('detail-status')?.value || 'PENDENTE';
             const ncsComObservacao = rankingNcs
                 .map(q => {
                     const historicoFiltrado = q.historico
