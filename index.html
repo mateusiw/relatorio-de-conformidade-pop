@@ -843,6 +843,7 @@
             const iconContainer = document.getElementById('custom-alert-icon-container');
             const titleEl = document.getElementById('custom-alert-title');
             const messageEl = document.getElementById('custom-alert-message');
+            const buttonsEl = document.getElementById('custom-alert-buttons');
             
             titleEl.innerText = title;
             messageEl.innerText = message;
@@ -873,7 +874,43 @@
                 icon.className = 'w-8 h-8 text-blue-600';
                 icon.setAttribute('data-lucide', 'info');
             }
+
+            buttonsEl.innerHTML = `<button onclick="closeCustomAlert()" class="w-full px-4 py-2.5 bg-emerald-600 text-white font-bold rounded-md hover:bg-emerald-700 transition">OK</button>`;
             
+            lucide.createIcons();
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function showConfirmAlert(message, onConfirm, title = 'Confirmação') {
+            const modal = document.getElementById('custom-alert');
+            const box = document.getElementById('custom-alert-box');
+            const icon = document.getElementById('custom-alert-icon');
+            const iconContainer = document.getElementById('custom-alert-icon-container');
+            const titleEl = document.getElementById('custom-alert-title');
+            const messageEl = document.getElementById('custom-alert-message');
+            const buttonsEl = document.getElementById('custom-alert-buttons');
+
+            titleEl.innerText = title;
+            messageEl.innerText = message;
+            iconContainer.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-4';
+            icon.className = 'w-8 h-8 text-amber-600';
+            icon.setAttribute('data-lucide', 'alert-triangle');
+
+            buttonsEl.innerHTML = `
+                <button onclick="closeCustomAlert()" class="w-full px-4 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition border border-gray-200">Cancelar</button>
+                <button id="btn-confirm-reset" class="w-full px-4 py-2.5 bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition">Limpar</button>
+            `;
+
+            const confirmBtn = document.getElementById('btn-confirm-reset');
+            confirmBtn.onclick = () => {
+                closeCustomAlert();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+
             lucide.createIcons();
             modal.classList.remove('hidden');
             setTimeout(() => {
@@ -932,10 +969,10 @@
         window.addEventListener('afterprint', restorePrintBlankFields);
 
         function promptResetForm() {
-            if(confirm(`Tem certeza que deseja limpar as respostas do ${currentPOP.toUpperCase()}?`)) {
+            showConfirmAlert(`Tem certeza que deseja limpar as respostas do ${currentPOP.toUpperCase()}?`, () => {
                 localStorage.removeItem(`data_${currentPOP}`);
                 changePOP(); 
-            }
+            }, 'Limpar formulário');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
