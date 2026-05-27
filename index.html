@@ -151,6 +151,46 @@
             outline: none;
             cursor: pointer;
         }
+        .question-help {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1d4ed8;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            cursor: help;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .question-help-tooltip {
+            position: absolute;
+            left: 50%;
+            top: calc(100% + 8px);
+            transform: translateX(-50%);
+            width: min(320px, 75vw);
+            background: #0f172a;
+            color: #f8fafc;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.35;
+            padding: 8px 10px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+            z-index: 60;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .12s ease;
+        }
+        .question-help:hover .question-help-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px;}
@@ -1689,6 +1729,34 @@
             else { el.classList.add('hidden'); icon.style.transform = 'rotate(0deg)'; }
         }
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getQuestionHelpText(questionText) {
+            const q = String(questionText || '').trim();
+            const base = q.replace(/\?+$/, '');
+
+            if (/ASO/i.test(q)) return 'Confirme se o exame médico ocupacional dos colaboradores está válido e dentro do prazo.';
+            if (/detergentes|sanitizantes/i.test(q)) return 'Veja se há produto de limpeza e desinfecção suficiente para trabalhar o turno sem faltar material.';
+            if (/unhas/i.test(q)) return 'Verifique se as unhas estão curtas e limpas, sem esmalte, para reduzir risco de contaminação.';
+            if (/touca|cabelo/i.test(q)) return 'Confira se o cabelo está totalmente protegido para não cair no alimento.';
+            if (/adornos|anéis|alianças|relógios|pulseiras|brincos|correntes/i.test(q)) return 'Ninguém deve usar acessórios durante o trabalho com alimentos.';
+            if (/lixeiras|resíduos|lixo/i.test(q)) return 'Confirme se o descarte está correto, em local apropriado e sem acúmulo.';
+            if (/pragas|roedores|insetos|baratas|formigas|cupins/i.test(q)) return 'Verifique sinais de pragas e se a área está protegida.';
+            if (/calibração|balanças|termômetros/i.test(q)) return 'Confirme se os equipamentos foram calibrados no prazo e podem ser usados com segurança.';
+            if (/água|potabilidade/i.test(q)) return 'Confira se a água usada está dentro do padrão de segurança.';
+            if (/visitantes/i.test(q)) return 'Veja se visitantes estão seguindo as mesmas regras de higiene da equipe.';
+            if (/observações gerais/i.test(q)) return 'Registre aqui problemas, ações corretivas e informações importantes que não cabem em uma pergunta específica.';
+
+            return `Verifique se "${base}" está sendo cumprido corretamente na rotina.`;
+        }
+
         function syncInputs(type, value) {
             document.getElementById(`${type}-print`).value = value;
             document.getElementById(`${type}-screen`).value = value;
@@ -1787,9 +1855,15 @@
                 if (!currentVisibleGroups.includes(index)) return; 
                 let gHtml = `<section class="mb-8 print:mb-4"><h3 class="text-lg font-bold text-slate-800 border-l-4 border-blue-600 pl-3 mb-4 bg-blue-50 py-2 rounded-r-lg">${group.title}</h3><div class="space-y-4 print:space-y-2">`;
                 group.questions.forEach(q => {
+                    const helpText = escapeHtml(getQuestionHelpText(q.text));
                     gHtml += `
                     <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-md transition-shadow question-container">
-                        <p class="font-medium text-gray-800 mb-2 text-sm md:text-base">${q.text}</p>
+                        <div class="flex items-start gap-2 mb-2">
+                            <p class="font-medium text-gray-800 text-sm md:text-base flex-1">${q.text}</p>
+                            <span class="question-help print:hidden">?
+                                <span class="question-help-tooltip">${helpText}</span>
+                            </span>
+                        </div>
                         <div class="flex flex-wrap gap-2 mb-3 print:mb-1">
                             <label class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-gray-100 transition select-none flex items-center gap-1 radio-label"><input type="radio" name="${q.id}" id="${q.id}_C" value="C" class="hidden radio-option" onchange="saveProgress()"><i data-lucide="check-circle" class="w-4 h-4 print:hidden"></i> C</label>
                             <label class="cursor-pointer px-4 py-2 rounded border border-gray-300 text-sm font-bold text-gray-600 hover:bg-red-50 transition select-none flex items-center gap-1 radio-label"><input type="radio" name="${q.id}" id="${q.id}_NC" value="NC" class="hidden radio-option" onchange="saveProgress()"><i data-lucide="x-circle" class="w-4 h-4 print:hidden"></i> NC</label>
