@@ -318,7 +318,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-12 print:gap-4 print:grid-cols-2">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs footer-label">Aprovado por:</label>
-                            <select id="aprovado-por" class="w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 footer-input" onchange="checkOutro('aprovado-por', 'aprovado-por-outro')">
+                            <select id="aprovado-por" class="w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:hidden footer-input" onchange="checkOutro('aprovado-por', 'aprovado-por-outro')">
                                 <option value="">Selecione...</option>
                                 <option value="Francisco Fagner Isaias">Francisco Fagner Isaias</option>
                                 <option value="Alessandra Leitão da Silva">Alessandra Leitão da Silva</option>
@@ -329,11 +329,12 @@
                                 <option value="Ana Paula Rodrigues da Silva">Ana Paula Rodrigues da Silva</option>
                                 <option value="outra">Outra (Digitar manualmente)</option>
                             </select>
-                            <input type="text" id="aprovado-por-outro" class="hidden w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 mt-2 footer-input" placeholder="Digite o nome..." oninput="saveProgress()">
+                            <input type="text" id="aprovado-por-outro" class="hidden w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:hidden mt-2 footer-input" placeholder="Digite o nome..." oninput="saveProgress()">
+                            <input type="text" id="aprovado-print" class="hidden print:block w-full border-b border-black bg-transparent p-0 h-8 footer-input" value="">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1 print:text-xs footer-label">Assinatura:</label>
-                            <select id="assinatura-digital" class="w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 footer-input" onchange="checkOutro('assinatura-digital', 'assinatura-digital-outro')">
+                            <select id="assinatura-digital" class="w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:hidden footer-input" onchange="checkOutro('assinatura-digital', 'assinatura-digital-outro')">
                                 <option value="">Selecione...</option>
                                 <option value="Francisco Fagner Isaias">Francisco Fagner Isaias</option>
                                 <option value="Alessandra Leitão da Silva">Alessandra Leitão da Silva</option>
@@ -344,7 +345,8 @@
                                 <option value="Ana Paula Rodrigues da Silva">Ana Paula Rodrigues da Silva</option>
                                 <option value="outra">Outra (Digitar manualmente)</option>
                             </select>
-                            <input type="text" id="assinatura-digital-outro" class="hidden w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:bg-transparent print:border-b print:p-0 print:h-8 mt-2 footer-input" placeholder="Digite o nome..." oninput="saveProgress()">
+                            <input type="text" id="assinatura-digital-outro" class="hidden w-full p-2 border-b-2 border-slate-300 bg-gray-50 focus:bg-white focus:border-blue-600 transition-colors outline-none font-medium print:hidden mt-2 footer-input" placeholder="Digite o nome..." oninput="saveProgress()">
+                            <input type="text" id="assinatura-print" class="hidden print:block w-full border-b border-black bg-transparent p-0 h-8 footer-input" value="">
                         </div>
                     </div>
                 </section>
@@ -832,6 +834,8 @@
             const idsToBlank = [
                 'responsavel-print',
                 'data-print',
+                'aprovado-print',
+                'assinatura-print',
                 'aprovado-por',
                 'aprovado-por-outro',
                 'assinatura-digital',
