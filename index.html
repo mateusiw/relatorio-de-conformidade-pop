@@ -218,7 +218,7 @@
                     <i data-lucide="send" class="w-5 h-5"></i>
                     <span class="hidden sm:inline">Enviar Dados</span>
                 </button>
-                <button onclick="window.print()" class="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition font-bold flex items-center gap-1 border border-white/10">
+                <button onclick="printChecklistBlankFields()" class="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition font-bold flex items-center gap-1 border border-white/10">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -625,6 +625,7 @@
         let chartPiePopNCInstance = null;
         let chartPieQuestionNCInstance = null;
         let chartParetoInstance = null;
+        let printFieldBackup = null;
 
         const chartValueLabelsPlugin = {
             id: 'chartValueLabels',
@@ -826,6 +827,45 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
+        function preparePrintBlankFields() {
+            if (printFieldBackup) return;
+            const idsToBlank = [
+                'responsavel-print',
+                'data-print',
+                'aprovado-por',
+                'aprovado-por-outro',
+                'assinatura-digital',
+                'assinatura-digital-outro'
+            ];
+
+            printFieldBackup = {};
+            idsToBlank.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                printFieldBackup[id] = el.value;
+                el.value = '';
+            });
+        }
+
+        function restorePrintBlankFields() {
+            if (!printFieldBackup) return;
+            Object.entries(printFieldBackup).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.value = value;
+            });
+            printFieldBackup = null;
+        }
+
+        function printChecklistBlankFields() {
+            preparePrintBlankFields();
+            window.print();
+            setTimeout(restorePrintBlankFields, 100);
+        }
+
+        window.addEventListener('beforeprint', preparePrintBlankFields);
+        window.addEventListener('afterprint', restorePrintBlankFields);
+
         function promptResetForm() {
             if(confirm(`Tem certeza que deseja limpar as respostas do ${currentPOP.toUpperCase()}?`)) {
                 localStorage.removeItem(`data_${currentPOP}`);
@@ -892,7 +932,7 @@
                     });
                 });
             }
-            if(data.meta.obsGeral) rows.push([...metaBase, 'Geral', 'OBS_GERAL', 'Observações Gerais', '', data.meta.obsGeral, crypto.randomUUID(), 'PENDENTE']);
+            if(data.meta.obsGeral) rows.push([...metaBase, 'Geral', 'OBS_GERAL', 'Observações Gerais', 'NC', data.meta.obsGeral, crypto.randomUUID(), 'PENDENTE']);
 
             if(rows.length === 0) {
                 showAlert("Preencha ao menos uma resposta antes de enviar.", "warning");
@@ -1136,7 +1176,7 @@
                 if (!daysWithData[dateStr]) daysWithData[dateStr] = { ncCount: 0, cCount: 0, ncs: [] };
 
                 // Estatísticas de Perguntas
-                if (qId && qId !== 'OBS_GERAL') {
+                if (qId) {
                     if (!questionStats[qId]) questionStats[qId] = { pop: pop, id: qId, text: qText, c: 0, nc: 0, na: 0, historico: [] };
                     if (resposta === 'C') questionStats[qId].c++;
                     else if (resposta === 'NC') {
@@ -1159,12 +1199,9 @@
                     if(dateStr !== 'Sem Data') daysWithData[dateStr].cCount++;
                 } else if (resposta === 'NC') { 
                     totalNC++; popConformidade[pop].nc++; trendStats[dateStr].nc++; sectorStats[setor].nc++;
-                    // KPI de ocorrências considera apenas NC com observação preenchida
-                    if (observacaoLimpa !== '') {
-                        const statusRaw = (row[13] || 'PENDENTE').toString().toUpperCase();
-                        const statusNormalizado = statusRaw === 'EM_ANDAMENTO' || statusRaw === 'RESOLVIDO' ? statusRaw : 'PENDENTE';
-                        statusOcorrencias[statusNormalizado] = (statusOcorrencias[statusNormalizado] || 0) + 1;
-                    }
+                    const statusRaw = (row[13] || 'PENDENTE').toString().toUpperCase();
+                    const statusNormalizado = statusRaw === 'EM_ANDAMENTO' || statusRaw === 'RESOLVIDO' ? statusRaw : 'PENDENTE';
+                    statusOcorrencias[statusNormalizado] = (statusOcorrencias[statusNormalizado] || 0) + 1;
                     if(dayOfWeek >= 0) dayOfWeekNCs[dayOfWeek]++;
                     if(dateStr !== 'Sem Data') {
                         daysWithData[dateStr].ncCount++;
