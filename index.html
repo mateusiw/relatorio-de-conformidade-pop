@@ -239,6 +239,10 @@
                     <i data-lucide="eye" id="eye-icon" class="w-5 h-5"></i>
                 </button>
             </div>
+            <label class="flex items-center gap-2 mb-4 cursor-pointer select-none">
+                <input type="checkbox" id="keep-logged-in" class="w-4 h-4 rounded accent-emerald-600 cursor-pointer">
+                <span class="text-sm text-gray-600">Manter conectado</span>
+            </label>
             <div class="flex justify-end gap-2">
                 <button onclick="closePasswordModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition">Cancelar</button>
                 <button id="btn-verify-pwd" onclick="verifyDashboardPassword()" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition flex items-center gap-2">
@@ -1130,11 +1134,17 @@
                 showDashboard();
                 return;
             }
+            if (localStorage.getItem('dash_auth') === 'true') {
+                dashboardAuthenticated = true;
+                showDashboard();
+                return;
+            }
             document.getElementById('password-modal').classList.remove('hidden');
             const pwdInput = document.getElementById('dashboard-password');
             pwdInput.value = '';
             pwdInput.type = 'password';
             document.getElementById('eye-icon').setAttribute('data-lucide', 'eye');
+            document.getElementById('keep-logged-in').checked = false;
             lucide.createIcons();
             document.getElementById('password-error').classList.add('hidden');
             pwdInput.focus();
@@ -1166,6 +1176,11 @@
                 const result = await response.json();
                 if (result.success && result.valid) {
                     dashboardAuthenticated = true;
+                    if (document.getElementById('keep-logged-in').checked) {
+                        localStorage.setItem('dash_auth', 'true');
+                    } else {
+                        localStorage.removeItem('dash_auth');
+                    }
                     closePasswordModal(); showDashboard();
                 } else {
                     document.getElementById('password-error').classList.remove('hidden');
